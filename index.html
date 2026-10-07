@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CP Coordinator Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: header strip → KPI row → (follow-up queue | pipeline charts) → partner register → activity log */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#eef1f5; --line:#dde2ea;
+  --fg:#14213a; --fg-2:#4a5568; --muted:#7a8496;
+  --navy:#13294b; --gold:#9a7630; --gold-soft:#f4ecdc; --on-gold:#ffffff; --teal:#1b7f86;
+  --bar:#2a78d6; --bar-2:#86b6ef;
+  --good:#1f8a4c; --good-bg:#e3f4ea; --warn:#a86a00; --warn-bg:#fdf0d5; --crit:#c23a3a; --crit-bg:#fbe3e3;
+  --display:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1522; --surface:#172033; --surface-2:#1e2940; --line:#2b3852;
+  --fg:#eef1f6; --fg-2:#b6bfcf; --muted:#8792a6;
+  --navy:#0a1424; --gold:#d6b26a; --gold-soft:#3a3222; --on-gold:#1a1408; --teal:#4fb8bf;
+  --bar:#3987e5; --bar-2:#184f95;
+  --good:#5cc98a; --good-bg:#16352a; --warn:#e6b04a; --warn-bg:#3a2e14; --crit:#ef7b7b; --crit-bg:#3d1d22;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1522; --surface:#172033; --surface-2:#1e2940; --line:#2b3852;
+  --fg:#eef1f6; --fg-2:#b6bfcf; --muted:#8792a6;
+  --navy:#0a1424; --gold:#d6b26a; --gold-soft:#3a3222; --on-gold:#1a1408; --teal:#4fb8bf;
+  --bar:#3987e5; --bar-2:#184f95;
+  --good:#5cc98a; --good-bg:#16352a; --warn:#e6b04a; --warn-bg:#3a2e14; --crit:#ef7b7b; --crit-bg:#3d1d22;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+header.top{background:var(--navy);color:#fff;padding-block:18px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#d6b26a;font-weight:600}
+.brand h1{margin:2px 0 0;font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1;text-wrap:balance}
+.top-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:#c9d2e3}
+.store-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px}
+.store-pill i{width:7px;height:7px;border-radius:50%;background:#9aa5b8}
+.store-pill.live i{background:#5cc98a}
+
+main{padding-block:20px 40px;display:grid;gap:20px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--gold)}
+.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
+.kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.kpi .val{font-size:26px;font-weight:700;margin-top:4px;line-height:1.1}
+.kpi .sub{font-size:12px;color:var(--fg-2);margin-top:4px}
+.kpi.alert .val{color:var(--crit)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
+.panel-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.panel-h h2{margin:0;font-family:var(--display);font-size:22px;font-weight:700;line-height:1.1}
+.panel-h p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.panel-b{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px}
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+
+/* follow-up queue */
+.queue{list-style:none;margin:0;padding:0;display:grid}
+.queue li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
+.queue li:first-child{border-top:0}
+.q-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-meta{font-size:12px;color:var(--fg-2)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
+.chip.crit{background:var(--crit-bg);color:var(--crit)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.good{background:var(--good-bg);color:var(--good)}
+.chip.neutral{background:var(--surface-2);color:var(--fg-2)}
+.chip.gold{background:var(--gold-soft);color:var(--gold)}
+.chip.sample{background:transparent;border:1px dashed var(--muted);color:var(--muted);font-weight:600}
+
+/* charts */
+.funnel{display:grid;gap:12px}
+.f-row{display:grid;grid-template-columns:92px minmax(0,1fr) 64px;gap:10px;align-items:center}
+.f-row .k{font-size:12px;color:var(--fg-2);font-weight:600}
+.f-track{height:26px;background:var(--surface-2);border-radius:4px;position:relative}
+.f-bar{height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
+.f-row .v{text-align:right;font-weight:700}
+.f-conv{font-size:12px;color:var(--muted);padding-left:102px}
+.hbars{display:grid;gap:8px}
+.hb{display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr) 56px;gap:10px;align-items:center;cursor:default;padding:2px 0;border-radius:4px}
+.hb:hover{background:var(--surface-2)}
+.hb .k{font-size:12px;color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .t{height:14px}
+.hb .b{height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
+.hb .v{text-align:right;font-size:12px;font-weight:700}
+.tip{position:fixed;pointer-events:none;background:var(--fg);color:var(--bg);font-size:12px;padding:7px 9px;border-radius:6px;z-index:50;max-width:240px;line-height:1.4}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--fg);font-size:15px;margin-bottom:4px}
+
+/* table */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters input,.filters select,.form input,.form select,.form textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+.filters input{width:220px;max-width:100%}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;background:var(--surface-2);cursor:pointer;user-select:none;white-space:nowrap}
+th.r,td.r{text-align:right}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+.p-name{font-weight:600}
+.p-firm{font-size:12px;color:var(--fg-2)}
+.tier{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tier.Platinum{color:var(--teal)} .tier.Gold{color:var(--gold)} .tier.Silver{color:var(--fg-2)}
+
+/* activity */
+.act-form{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,2fr) auto;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.act-form select,.act-form input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+.acts{list-style:none;margin:0;padding:0}
+.acts li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:12px;padding:10px 16px;border-top:1px solid var(--line)}
+.acts li:first-child{border-top:0}
+.acts time{font-size:12px;color:var(--muted)}
+.acts .what{font-weight:600}
+.acts .note{color:var(--fg-2);font-size:13px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(10,18,32,.55);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:40}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;width:100%;max-width:640px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.form label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--fg-2);min-width:0}
+.form .full{grid-column:1/-1}
+.form textarea{min-height:70px;resize:vertical}
+.modal-f{display:flex;justify-content:space-between;gap:8px;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.modal-f .right{display:flex;gap:8px}
+.confirm-del{color:var(--crit);font-size:12px;align-self:center}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;z-index:60}
+.banner{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:13px}
+
+@media (max-width:1080px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.charts{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wrap{padding-inline:16px}
+  .act-form{grid-template-columns:1fr 1fr}
+  .act-form input{grid-column:1/-1}
+  .form{grid-template-columns:1fr}
+  .hb{grid-template-columns:minmax(0,96px) minmax(0,1fr) 48px}
+}
+@media (prefers-reduced-motion:no-preference){.f-bar,.hb .b{transition:width .4s ease}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <small>Alcove Realty · New Kolkata</small>
+      <h1>Channel Partner Coordinator Desk</h1>
+    </div>
+    <div class="top-meta">
+      <span id="today" class="num"></span>
+      <span id="storePill" class="store-pill"><i></i><span>Loading…</span></span>
+      <button class="btn sm" id="clearSampleBtn" type="button">Remove samples</button>
+      <button class="btn sm" id="csvBtn" type="button">Export CSV</button>
+      <button class="btn sm" id="exportBtn" type="button">Export backup</button>
+      <button class="btn sm" id="importBtn" type="button">Restore backup</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <button class="btn primary" id="addBtn" type="button">+ Add partner</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="kpis" aria-label="Summary">
+    <div class="kpi"><div class="lbl">Active partners</div><div class="val num" id="kActive">–</div><div class="sub" id="kActiveSub">of 0 empanelled</div></div>
+    <div class="kpi"><div class="lbl">Leads shared</div><div class="val num" id="kLeads">–</div><div class="sub">all partners, to date</div></div>
+    <div class="kpi"><div class="lbl">Site visits</div><div class="val num" id="kVisits">–</div><div class="sub" id="kVisitsSub">lead → visit 0%</div></div>
+    <div class="kpi"><div class="lbl">Bookings</div><div class="val num" id="kBook">–</div><div class="sub" id="kBookSub">₹0 Cr sales value</div></div>
+    <div class="kpi"><div class="lbl">Brokerage pending</div><div class="val num" id="kComm">–</div><div class="sub" id="kCommSub">₹0 L released</div></div>
+    <div class="kpi" id="kDueCard"><div class="lbl">Follow-ups due</div><div class="val num" id="kDue">–</div><div class="sub" id="kDueSub">0 overdue</div></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel" aria-labelledby="qH">
+      <div class="panel-h"><div><h2 id="qH">Follow-up queue</h2><p>Overdue and next 7 days, by follow-up date</p></div></div>
+      <ul class="queue" id="queue"></ul>
+    </section>
+
+    <div class="charts">
+      <section class="panel" aria-labelledby="fH">
+        <div class="panel-h"><div><h2 id="fH">Partner pipeline</h2><p>Leads to bookings, all partners</p></div></div>
+        <div class="panel-b"><div class="funnel" id="funnel"></div></div>
+      </section>
+      <section class="panel" aria-labelledby="tH">
+        <div class="panel-h"><div><h2 id="tH">Top partners</h2><p>Sales value booked, ₹ Cr</p></div></div>
+        <div class="panel-b"><div class="hbars" id="topBars"></div></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="panel" aria-labelledby="rH">
+    <div class="panel-h">
+      <div><h2 id="rH">Partner register</h2><p id="regCount">0 partners</p></div>
+      <div class="filters">
+        <input id="q" type="search" placeholder="Search name, firm, locality" aria-label="Search partners">
+        <select id="fTier" aria-label="Filter by tier"><option value="">All tiers</option><option>Platinum</option><option>Gold</option><option>Silver</option></select>
+        <select id="fStatus" aria-label="Filter by status"><option value="">All statuses</option><option>Active</option><option>Warm</option><option>Dormant</option><option>Onboarding</option></select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th data-k="name">Partner</th><th data-k="tier">Tier</th><th data-k="status">Status</th><th data-k="locality">Locality</th>
+          <th data-k="leads" class="r">Leads</th><th data-k="visits" class="r">Visits</th><th data-k="bookings" class="r">Bookings</th>
+          <th data-k="valueCr" class="r">Value ₹ Cr</th><th data-k="pendingL" class="r">Pending ₹ L</th><th data-k="lastContact">Last contact</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="tblEmpty" class="empty" hidden></div>
+  </section>
+
+  <section class="panel" aria-labelledby="aH">
+    <div class="panel-h"><div><h2 id="aH">Activity log</h2><p>Calls, meetings, site visits and bookings with partners</p></div></div>
+    <form class="act-form" id="actForm">
+      <select id="aPartner" aria-label="Partner" required></select>
+      <select id="aType" aria-label="Activity type"><option>Call</option><option>WhatsApp</option><option>Meeting</option><option>Site visit</option><option>Booking</option><option>Brokerage paid</option></select>
+      <input id="aNote" placeholder="What happened? e.g. Shared 3 leads for 4BHK, visit Saturday" aria-label="Note">
+      <button class="btn primary" type="submit">Log</button>
+    </form>
+    <ul class="acts" id="acts"></ul>
+  </section>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="panel-h"><div><h2 id="mTitle">Add partner</h2><p>Brokerage figures in ₹ lakh, sales value in ₹ crore</p></div></div>
+    <form id="pForm">
+      <div class="form">
+        <label>Partner name<input id="pName" required></label>
+        <label>Firm<input id="pFirm"></label>
+        <label>Phone<input id="pPhone" inputmode="tel"></label>
+        <label>RERA no.<input id="pRera"></label>
+        <label>Locality<input id="pLocality" placeholder="e.g. Rajarhat, Salt Lake"></label>
+        <label>Tier<select id="pTier"><option>Platinum</option><option>Gold</option><option selected>Silver</option></select></label>
+        <label>Status<select id="pStatus"><option>Active</option><option>Warm</option><option>Dormant</option><option selected>Onboarding</option></select></label>
+        <label>Leads shared<input id="pLeads" type="number" min="0" value="0"></label>
+        <label>Site visits<input id="pVisits" type="number" min="0" value="0"></label>
+        <label>Bookings<input id="pBookings" type="number" min="0" value="0"></label>
+        <label>Sales value (₹ Cr)<input id="pValue" type="number" min="0" step="0.01" value="0"></label>
+        <label>Brokerage earned (₹ L)<input id="pComm" type="number" min="0" step="0.01" value="0"></label>
+        <label>Brokerage paid (₹ L)<input id="pPaid" type="number" min="0" step="0.01" value="0"></label>
+        <label>Last contact<input id="pLast" type="date"></label>
+        <label>Next follow-up<input id="pNext" type="date"></label>
+        <label class="full">Notes<textarea id="pNotes"></textarea></label>
+      </div>
+      <div class="modal-f">
+        <div><button class="btn" type="button" id="delBtn" hidden>Delete</button> <span class="confirm-del" id="delMsg" hidden>Click Delete again to remove this partner.</span></div>
+        <div class="right"><button class="btn" type="button" id="cancelBtn">Cancel</button><button class="btn primary" type="submit" id="saveBtn">Save partner</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="tip" id="tip" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const state = { partners: [], acts: [], sort: { k: "nextFollowUp", dir: 1 }, editing: null, delArmed: false };
+let db = null, canWrite = true;
+
+const pad = n => String(n).padStart(2, "0");
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const TODAY = iso(new Date());
+const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return iso(d); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 864e5);
+const fmtDate = s => s ? new Date(s + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—";
+const n = v => Number(v) || 0;
+const inr = (v, d = 2) => n(v).toLocaleString("en-IN", { maximumFractionDigits: d, minimumFractionDigits: 0 });
+const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "–";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+$("today").textContent = new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2400); }
+function setStore(live, text) { $("storePill").classList.toggle("live", live); $("storePill").lastElementChild.textContent = text; }
+function banner(msg) { $("banner").textContent = msg; $("banner").hidden = !msg; }
+
+/* ---------- render ---------- */
+function render() { renderKpis(); renderQueue(); renderFunnel(); renderTop(); renderTable(); renderPartnerSelect(); renderActs(); }
+
+function totals() {
+  const P = state.partners, t = { leads: 0, visits: 0, bookings: 0, value: 0, comm: 0, paid: 0 };
+  P.forEach(p => { t.leads += n(p.leads); t.visits += n(p.visits); t.bookings += n(p.bookings); t.value += n(p.valueCr); t.comm += n(p.commissionL); t.paid += n(p.paidL); });
+  return t;
+}
+
+function renderKpis() {
+  const P = state.partners, t = totals();
+  $("kActive").textContent = P.filter(p => p.status === "Active").length;
+  $("kActiveSub").textContent = `of ${P.length} empanelled`;
+  $("kLeads").textContent = inr(t.leads, 0);
+  $("kVisits").textContent = inr(t.visits, 0);
+  $("kVisitsSub").textContent = `lead → visit ${pct(t.visits, t.leads)}`;
+  $("kBook").textContent = inr(t.bookings, 0);
+  $("kBookSub").textContent = `₹${inr(t.value)} Cr sales value`;
+  $("kComm").textContent = "₹" + inr(Math.max(0, t.comm - t.paid)) + " L";
+  $("kCommSub").textContent = `₹${inr(t.paid)} L released of ₹${inr(t.comm)} L`;
+  const due = P.filter(p => p.nextFollowUp && p.nextFollowUp <= TODAY);
+  const over = due.filter(p => p.nextFollowUp < TODAY).length;
+  $("kDue").textContent = due.length;
+  $("kDueSub").textContent = `${over} overdue · ${due.length - over} today`;
+  $("kDueCard").classList.toggle("alert", over > 0);
+}
+
+function dueChip(d) {
+  if (!d) return `<span class="chip neutral">No date</span>`;
+  const diff = daysBetween(TODAY, d);
+  if (diff < 0) return `<span class="chip crit">⚠ ${-diff}d overdue</span>`;
+  if (diff === 0) return `<span class="chip warn">● Today</span>`;
+  return `<span class="chip neutral">in ${diff}d · ${fmtDate(d)}</span>`;
+}
+
+function renderQueue() {
+  const limit = addDays(TODAY, 7);
+  const list = state.partners.filter(p => p.nextFollowUp && p.nextFollowUp <= limit).sort((a, b) => a.nextFollowUp.localeCompare(b.nextFollowUp));
+  const ul = $("queue");
+  if (!state.partners.length) { ul.innerHTML = `<li style="display:block"><div class="empty"><strong>No partners yet</strong>Add your first channel partner with “+ Add partner”. Their follow-up dates will queue up here.</div></li>`; return; }
+  if (!list.length) { ul.innerHTML = `<li style="display:block"><div class="empty"><strong>All caught up</strong>No follow-ups due in the next 7 days.</div></li>`; return; }
+  ul.innerHTML = list.map(p => `
+    <li>
+      <div>${dueChip(p.nextFollowUp)}</div>
+      <div style="min-width:0">
+        <div class="q-name">${esc(p.name)} ${p.sample ? '<span class="chip sample">Sample</span>' : ""}</div>
+        <div class="q-meta">${esc(p.firm || "")}${p.phone ? " · <span class='num'>" + esc(p.phone) + "</span>" : ""} · last spoke ${p.lastContact ? daysBetween(p.lastContact, TODAY) + "d ago" : "never"}</div>
+      </div>
+      <button class="btn sm" type="button" data-done="${esc(p.id)}" ${canWrite ? "" : "disabled"} title="Mark contacted today and set next follow-up in 7 days">Done · +7d</button>
+    </li>`).join("");
+}
+
+function renderFunnel() {
+  const t = totals(), el = $("funnel");
+  if (!state.partners.length) { el.innerHTML = `<div class="empty">The pipeline fills in once partners are added.</div>`; return; }
+  const max = Math.max(t.leads, 1);
+  const rows = [["Leads", t.leads], ["Site visits", t.visits], ["Bookings", t.bookings]];
+  el.innerHTML = rows.map(([k, v], i) => `
+    <div class="f-row" data-tip="${k}: ${inr(v, 0)}${i ? " · " + pct(v, rows[i - 1][1]) + " of " + rows[i - 1][0].toLowerCase() : ""}">
+      <span class="k">${k}</span>
+      <div class="f-track"><div class="f-bar" style="width:${v / max * 100}%"></div></div>
+      <span class="v num">${inr(v, 0)}</span>
+    </div>`).join("") +
+    `<div class="f-conv num">Lead → visit ${pct(t.visits, t.leads)} · Visit → booking ${pct(t.bookings, t.visits)} · Avg ticket ₹${t.bookings ? inr(t.value / t.bookings) : "–"} Cr</div>`;
+}
+
+function renderTop() {
+  const el = $("topBars");
+  const top = state.partners.filter(p => n(p.valueCr) > 0).sort((a, b) => n(b.valueCr) - n(a.valueCr)).slice(0, 7);
+  if (!top.length) { el.innerHTML = `<div class="empty">No bookings recorded yet.</div>`; return; }
+  const max = n(top[0].valueCr);
+  el.innerHTML = top.map(p => `
+    <div class="hb" data-tip="${esc(p.name)} (${esc(p.tier)}) · ${n(p.bookings)} bookings · ₹${inr(p.valueCr)} Cr · conv. ${pct(n(p.bookings), n(p.visits))} of visits">
+      <span class="k">${esc(p.name)}</span>
+      <div class="t"><div class="b" style="width:${n(p.valueCr) / max * 100}%"></div></div>
+      <span class="v num">${inr(p.valueCr)}</span>
+    </div>`).join("");
+}
+
+const statusChip = s => `<span class="chip ${{ Active: "good", Warm: "warn", Dormant: "crit", Onboarding: "gold" }[s] || "neutral"}">${{ Active: "●", Warm: "◐", Dormant: "○", Onboarding: "+" }[s] || ""} ${esc(s || "—")}</span>`;
+
+function renderTable() {
+  const q = $("q").value.trim().toLowerCase(), ft = $("fTier").value, fs = $("fStatus").value;
+  let rows = state.partners.map(p => ({ ...p, pendingL: n(p.commissionL) - n(p.paidL) }))
+    .filter(p => (!ft || p.tier === ft) && (!fs || p.status === fs) && (!q || [p.name, p.firm, p.locality].join(" ").toLowerCase().includes(q)));
+  const { k, dir } = state.sort;
+  rows.sort((a, b) => { const x = a[k] ?? "", y = b[k] ?? ""; return (typeof x === "number" || typeof y === "number" ? n(x) - n(y) : String(x).localeCompare(String(y))) * dir; });
+  $("regCount").textContent = `${rows.length} of ${state.partners.length} partners · click a row to edit`;
+  document.querySelectorAll("th[data-k]").forEach(th => { th.textContent = th.textContent.replace(/ [▲▼]$/, ""); if (th.dataset.k === k) th.textContent += dir > 0 ? " ▲" : " ▼"; });
+  $("tbody").innerHTML = rows.map(p => {
+    const since = p.lastContact ? daysBetween(p.lastContact, TODAY) : null;
+    return `<tr data-id="${esc(p.id)}" tabindex="0">
+      <td><div class="p-name">${esc(p.name)} ${p.sample ? '<span class="chip sample">Sample</span>' : ""}</div><div class="p-firm">${esc(p.firm || "")}</div></td>
+      <td><span class="tier ${esc(p.tier)}">${esc(p.tier || "")}</span></td>
+      <td>${statusChip(p.status)}</td>
+      <td>${esc(p.locality || "")}</td>
+      <td class="r num">${inr(p.leads, 0)}</td><td class="r num">${inr(p.visits, 0)}</td><td class="r num">${inr(p.bookings, 0)}</td>
+      <td class="r num">${inr(p.valueCr)}</td><td class="r num">${p.pendingL > 0 ? inr(p.pendingL) : "—"}</td>
+      <td class="num">${fmtDate(p.lastContact)}${since !== null && since > 21 ? ` <span class="chip crit">${since}d</span>` : ""}</td>
+    </tr>`;
+  }).join("");
+  const empty = $("tblEmpty");
+  empty.hidden = rows.length > 0;
+  empty.innerHTML = state.partners.length ? "<strong>No matches</strong>Try a different search or clear the filters." : "<strong>Your partner register is empty</strong>Use “+ Add partner” to empanel your first broker.";
+}
+
+function renderPartnerSelect() {
+  const sel = $("aPartner"), cur = sel.value;
+  sel.innerHTML = `<option value="">Choose partner…</option>` + [...state.partners].sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+  sel.value = cur;
+}
+
+function renderActs() {
+  const ul = $("acts");
+  if (!state.acts.length) { ul.innerHTML = `<li style="display:block"><div class="empty"><strong>No activity logged</strong>Log a call, meeting or site visit above. It also updates that partner’s last-contact date.</div></li>`; return; }
+  ul.innerHTML = state.acts.map(a => `<li>
+    <time class="num">${fmtDate(a.date)}</time>
+    <div style="min-width:0"><div class="what">${esc(a.type)} · ${esc(a.partnerName)} ${a.sample ? '<span class="chip sample">Sample</span>' : ""}</div>${a.note ? `<div class="note">${esc(a.note)}</div>` : ""}</div>
+  </li>`).join("");
+}
+
+/* ---------- tooltip ---------- */
+document.addEventListener("mousemove", e => {
+  const t = e.target.closest("[data-tip]"), tip = $("tip");
+  if (!t) { tip.hidden = true; return; }
+  tip.textContent = t.dataset.tip; tip.hidden = false;
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+});
+
+/* ---------- interactions ---------- */
+["q", "fTier", "fStatus"].forEach(id => $(id).addEventListener("input", renderTable));
+document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", () => {
+  const k = th.dataset.k; state.sort = { k, dir: state.sort.k === k ? -state.sort.dir : 1 }; renderTable();
+}));
+$("tbody").addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) openModal(tr.dataset.id); });
+$("tbody").addEventListener("keydown", e => { if (e.key === "Enter") { const tr = e.target.closest("tr[data-id]"); if (tr) openModal(tr.dataset.id); } });
+$("addBtn").addEventListener("click", () => openModal(null));
+$("cancelBtn").addEventListener("click", closeModal);
+$("overlay").addEventListener("click", e => { if (e.target === $("overlay")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("overlay").hidden) closeModal(); });
+
+const F = { name: "pName", firm: "pFirm", phone: "pPhone", rera: "pRera", locality: "pLocality", tier: "pTier", status: "pStatus", leads: "pLeads", visits: "pVisits", bookings: "pBookings", valueCr: "pValue", commissionL: "pComm", paidL: "pPaid", lastContact: "pLast", nextFollowUp: "pNext", notes: "pNotes" };
+const NUMS = ["leads", "visits", "bookings", "valueCr", "commissionL", "paidL"];
+
+function openModal(id) {
+  const p = id ? state.partners.find(x => x.id === id) : null;
+  state.editing = id; state.delArmed = false;
+  $("mTitle").textContent = p ? "Edit partner" : "Add partner";
+  const blank = { tier: "Silver", status: "Onboarding", lastContact: TODAY, nextFollowUp: addDays(TODAY, 3) };
+  Object.entries(F).forEach(([k, el]) => { const v = (p || blank)[k]; $(el).value = v ?? (NUMS.includes(k) ? 0 : ""); });
+  $("delBtn").hidden = !p || !canWrite; $("delMsg").hidden = true;
+  $("saveBtn").disabled = !canWrite;
+  $("overlay").hidden = false; $("pName").focus();
+}
+function closeModal() { $("overlay").hidden = true; state.editing = null; }
+
+$("pForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!db) return;
+  const body = {};
+  Object.entries(F).forEach(([k, el]) => { body[k] = NUMS.includes(k) ? n($(el).value) : $(el).value.trim(); });
+  const old = state.editing ? state.partners.find(x => x.id === state.editing) : null;
+  if (old?.sample) body.sample = true;
+  try {
+    $("saveBtn").disabled = true;
+    if (state.editing) await db.doc("partners/" + state.editing).set(body);
+    else await db.collection("partners").add(body);
+    toast(state.editing ? "Partner updated" : "Partner added");
+    closeModal();
+  } catch (err) { writeError(err); } finally { $("saveBtn").disabled = !canWrite; }
+});
+
+$("delBtn").addEventListener("click", async () => {
+  if (!state.delArmed) { state.delArmed = true; $("delMsg").hidden = false; return; }
+  try { await db.doc("partners/" + state.editing).delete(); toast("Partner removed"); closeModal(); } catch (err) { writeError(err); }
+});
+
+$("queue").addEventListener("click", async e => {
+  const b = e.target.closest("[data-done]"); if (!b || !db) return;
+  const p = state.partners.find(x => x.id === b.dataset.done); if (!p) return;
+  b.disabled = true;
+  try {
+    await db.doc("partners/" + p.id).update({ lastContact: TODAY, nextFollowUp: addDays(TODAY, 7) });
+    await db.collection("activity").add({ partnerId: p.id, partnerName: p.name, type: "Follow-up done", note: "Next follow-up set for " + fmtDate(addDays(TODAY, 7)), date: TODAY, ts: Date.now() });
+    toast(`${p.name}: next follow-up ${fmtDate(addDays(TODAY, 7))}`);
+  } catch (err) { writeError(err); b.disabled = false; }
+});
+
+$("actForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!db) return;
+  const p = state.partners.find(x => x.id === $("aPartner").value);
+  if (!p) { toast("Choose a partner first."); return; }
+  try {
+    await db.collection("activity").add({ partnerId: p.id, partnerName: p.name, type: $("aType").value, note: $("aNote").value.trim(), date: TODAY, ts: Date.now() });
+    if (p.lastContact !== TODAY) await db.doc("partners/" + p.id).update({ lastContact: TODAY });
+    $("aNote").value = ""; toast("Activity logged");
+  } catch (err) { writeError(err); }
+});
+
+function writeError() {
+  toast("Couldn’t save. Check that this browser allows site data, and use Export backup to keep a copy.");
+}
+
+/* ---------- local store (saves in this browser) ---------- */
+const KEY = "alcove-cp-desk-v1";
+const SAMPLE = {
+  partners: {
+    "sample-1": { sample: true, name: "Eastline Realty", firm: "Sample partner", phone: "98300 00001", locality: "Rajarhat", tier: "Platinum", status: "Active", leads: 42, visits: 19, bookings: 5, valueCr: 11.8, commissionL: 23.6, paidL: 14, lastContact: addDays(TODAY, -4), nextFollowUp: addDays(TODAY, -1), notes: "Example record. Delete when you add real partners." },
+    "sample-2": { sample: true, name: "Hooghly Homes", firm: "Sample partner", phone: "98300 00002", locality: "Salt Lake", tier: "Gold", status: "Active", leads: 28, visits: 11, bookings: 3, valueCr: 6.9, commissionL: 13.8, paidL: 13.8, lastContact: addDays(TODAY, -2), nextFollowUp: TODAY, notes: "Example record." },
+    "sample-3": { sample: true, name: "NewTown Prime Estates", firm: "Sample partner", phone: "98300 00003", locality: "New Town", tier: "Gold", status: "Warm", leads: 17, visits: 6, bookings: 1, valueCr: 2.4, commissionL: 4.8, paidL: 0, lastContact: addDays(TODAY, -15), nextFollowUp: addDays(TODAY, 2), notes: "Example record." },
+    "sample-4": { sample: true, name: "Southern Avenue Advisors", firm: "Sample partner", phone: "98300 00004", locality: "Ballygunge", tier: "Silver", status: "Dormant", leads: 6, visits: 1, bookings: 0, valueCr: 0, commissionL: 0, paidL: 0, lastContact: addDays(TODAY, -40), nextFollowUp: addDays(TODAY, -6), notes: "Example record." },
+    "sample-5": { sample: true, name: "Bypass Property Desk", firm: "Sample partner", phone: "98300 00005", locality: "EM Bypass", tier: "Silver", status: "Onboarding", leads: 2, visits: 0, bookings: 0, valueCr: 0, commissionL: 0, paidL: 0, lastContact: addDays(TODAY, -1), nextFollowUp: addDays(TODAY, 4), notes: "Example record." }
+  },
+  activity: {
+    "sample-a1": { sample: true, partnerId: "sample-2", partnerName: "Hooghly Homes", type: "Site visit", note: "Example: 2 families toured the 4BHK show flat.", date: addDays(TODAY, -2), ts: Date.now() - 2 * 864e5 },
+    "sample-a2": { sample: true, partnerId: "sample-1", partnerName: "Eastline Realty", type: "Booking", note: "Example: 1 booking confirmed, tower B.", date: addDays(TODAY, -4), ts: Date.now() - 4 * 864e5 }
+  }
+};
+let store = null, persisted = true;
+try { store = JSON.parse(localStorage.getItem(KEY)); } catch (e) { persisted = false; }
+if (!store || !store.partners || !store.activity) store = JSON.parse(JSON.stringify(SAMPLE));
+
+function commit() {
+  try { localStorage.setItem(KEY, JSON.stringify(store)); }
+  catch (e) { persisted = false; setStore(false, "Not saving"); banner("This browser is blocking storage, so changes will be lost when you close the page. Use Export backup to keep a copy."); }
+  sync();
+}
+function sync() {
+  state.partners = Object.entries(store.partners).map(([id, d]) => ({ id, ...d }));
+  state.acts = Object.entries(store.activity).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.ts - a.ts).slice(0, 60);
+  render();
+}
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+db = {
+  doc(path) {
+    const [col, id] = path.split("/");
+    return {
+      set: async d => { store[col][id] = { ...d }; commit(); },
+      update: async d => { if (!store[col][id]) throw new Error("missing"); Object.assign(store[col][id], d); commit(); },
+      delete: async () => { delete store[col][id]; commit(); }
+    };
+  },
+  collection(col) {
+    return { add: async d => { const id = newId(); store[col][id] = { ...d }; commit(); return { id }; } };
+  }
+};
+
+/* ---------- backup, restore, CSV ---------- */
+function download(name, blob) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+$("exportBtn").addEventListener("click", () => {
+  download(`cp-desk-backup-${TODAY}.json`, new Blob([JSON.stringify(store, null, 2)], { type: "application/json" }));
+  toast("Backup downloaded");
+});
+$("csvBtn").addEventListener("click", () => {
+  const cols = ["name", "firm", "phone", "rera", "locality", "tier", "status", "leads", "visits", "bookings", "valueCr", "commissionL", "paidL", "lastContact", "nextFollowUp", "notes"];
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const csv = [cols.join(","), ...state.partners.map(p => cols.map(c => q(p[c])).join(","))].join("\r\n");
+  download(`cp-register-${TODAY}.csv`, new Blob(["﻿" + csv], { type: "text/csv" }));
+  toast("Partner register exported to CSV");
+});
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || !d.partners || !d.activity) throw new Error("bad file");
+    store = d; commit(); toast(`Restored ${Object.keys(d.partners).length} partners`);
+  } catch (err) { toast("That file isn’t a CP desk backup. Choose a .json file made with Export backup."); }
+  e.target.value = "";
+});
+let clearArmed = false;
+$("clearSampleBtn").addEventListener("click", () => {
+  const b = $("clearSampleBtn");
+  if (!clearArmed) { clearArmed = true; b.textContent = "Click again to confirm"; setTimeout(() => { clearArmed = false; b.textContent = "Remove samples"; }, 4000); return; }
+  ["partners", "activity"].forEach(c => Object.keys(store[c]).forEach(id => { if (store[c][id].sample) delete store[c][id]; }));
+  clearArmed = false; b.textContent = "Remove samples";
+  commit(); toast("Sample records removed");
+});
+
+setStore(persisted, persisted ? "Saved in this browser" : "Not saving");
+if (!persisted) banner("This browser is blocking storage, so changes will be lost when you close the page. Use Export backup to keep a copy.");
+sync();
+</script>
+</body>
+</html>
