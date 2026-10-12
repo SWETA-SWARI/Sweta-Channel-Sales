@@ -1,588 +1,1007 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CP Coordinator Desk</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Sweta's Second Brain</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: header strip → KPI row → (follow-up queue | pipeline charts) → partner register → activity log */
+/* Layout: sticky brand header + scrollable tab rail; each tab is a single column of working panels, two columns on wide screens */
 :root{
-  --bg:#f5f6f8; --surface:#ffffff; --surface-2:#eef1f5; --line:#dde2ea;
-  --fg:#14213a; --fg-2:#4a5568; --muted:#7a8496;
-  --navy:#13294b; --gold:#9a7630; --gold-soft:#f4ecdc; --on-gold:#ffffff; --teal:#1b7f86;
-  --bar:#2a78d6; --bar-2:#86b6ef;
-  --good:#1f8a4c; --good-bg:#e3f4ea; --warn:#a86a00; --warn-bg:#fdf0d5; --crit:#c23a3a; --crit-bg:#fbe3e3;
-  --display:"Cormorant Garamond",Georgia,"Times New Roman",serif;
-  --body:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface2:#EDF1F6; --line:#D9DFE8;
+  --fg:#16213A; --muted:#5B6782; --navy:#14213D; --gold:#A87A2E; --gold-soft:#F4EBDA;
+  --teal:#1C726D; --teal-soft:#DDEFEC; --ok:#1F7A4D; --ok-soft:#DFF2E7; --warn:#9A6A00; --warn-soft:#FBF0D4;
+  --bad:#B4382F; --bad-soft:#F9E1DE; --on-navy:#F4F1EA;
+  --display:"Marcellus", "Cormorant Garamond", Georgia, serif;
+  --body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --r:10px;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0f1522; --surface:#172033; --surface-2:#1e2940; --line:#2b3852;
-  --fg:#eef1f6; --fg-2:#b6bfcf; --muted:#8792a6;
-  --navy:#0a1424; --gold:#d6b26a; --gold-soft:#3a3222; --on-gold:#1a1408; --teal:#4fb8bf;
-  --bar:#3987e5; --bar-2:#184f95;
-  --good:#5cc98a; --good-bg:#16352a; --warn:#e6b04a; --warn-bg:#3a2e14; --crit:#ef7b7b; --crit-bg:#3d1d22;
-  color-scheme:dark}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1424; --surface:#152038; --surface2:#1B2844; --line:#2A3A5C;
+  --fg:#E6EBF3; --muted:#9AA7C0; --navy:#0A1020; --gold:#D8AE62; --gold-soft:#3A2F1C;
+  --teal:#5BBDB5; --teal-soft:#16393A; --ok:#5CC98E; --ok-soft:#173726; --warn:#E3B54A; --warn-soft:#3A2F14;
+  --bad:#F08A80; --bad-soft:#401E1C; --on-navy:#F4F1EA; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f1522; --surface:#172033; --surface-2:#1e2940; --line:#2b3852;
-  --fg:#eef1f6; --fg-2:#b6bfcf; --muted:#8792a6;
-  --navy:#0a1424; --gold:#d6b26a; --gold-soft:#3a3222; --on-gold:#1a1408; --teal:#4fb8bf;
-  --bar:#3987e5; --bar-2:#184f95;
-  --good:#5cc98a; --good-bg:#16352a; --warn:#e6b04a; --warn-bg:#3a2e14; --crit:#ef7b7b; --crit-bg:#3d1d22;
-  color-scheme:dark}
+  --bg:#0D1424; --surface:#152038; --surface2:#1B2844; --line:#2A3A5C;
+  --fg:#E6EBF3; --muted:#9AA7C0; --navy:#0A1020; --gold:#D8AE62; --gold-soft:#3A2F1C;
+  --teal:#5BBDB5; --teal-soft:#16393A; --ok:#5CC98E; --ok-soft:#173726; --warn:#E3B54A; --warn-soft:#3A2F14;
+  --bad:#F08A80; --bad-soft:#401E1C; --on-navy:#F4F1EA; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
-button,input,select,textarea{font:inherit;color:inherit}
-.num{font-variant-numeric:tabular-nums}
-:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-
-header.top{background:var(--navy);color:#fff;padding-block:18px}
-.wrap{max-width:1240px;margin:0 auto;padding-inline:20px}
-.top .wrap{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
-.brand small{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#d6b26a;font-weight:600}
-.brand h1{margin:2px 0 0;font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1;text-wrap:balance}
-.top-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:#c9d2e3}
-.store-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.1);font-size:12px}
-.store-pill i{width:7px;height:7px;border-radius:50%;background:#9aa5b8}
-.store-pill.live i{background:#5cc98a}
-
-main{padding-block:20px 40px;display:grid;gap:20px}
-.btn{border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px}
-.btn:hover{border-color:var(--gold)}
-.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
-.btn.primary:hover{filter:brightness(1.06)}
-.btn.sm{padding:4px 9px;font-size:12px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-
-.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
-.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;min-width:0}
-.kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.kpi .val{font-size:26px;font-weight:700;margin-top:4px;line-height:1.1}
-.kpi .sub{font-size:12px;color:var(--fg-2);margin-top:4px}
-.kpi.alert .val{color:var(--crit)}
-
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-width:0}
-.panel-h{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
-.panel-h h2{margin:0;font-family:var(--display);font-size:22px;font-weight:700;line-height:1.1}
-.panel-h p{margin:2px 0 0;color:var(--muted);font-size:12px}
-.panel-b{padding:14px 16px}
-.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px}
-.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
-
-/* follow-up queue */
-.queue{list-style:none;margin:0;padding:0;display:grid}
-.queue li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)}
-.queue li:first-child{border-top:0}
-.q-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.q-meta{font-size:12px;color:var(--fg-2)}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;letter-spacing:.02em}
-.chip.crit{background:var(--crit-bg);color:var(--crit)}
-.chip.warn{background:var(--warn-bg);color:var(--warn)}
-.chip.good{background:var(--good-bg);color:var(--good)}
-.chip.neutral{background:var(--surface-2);color:var(--fg-2)}
-.chip.gold{background:var(--gold-soft);color:var(--gold)}
-.chip.sample{background:transparent;border:1px dashed var(--muted);color:var(--muted);font-weight:600}
-
-/* charts */
-.funnel{display:grid;gap:12px}
-.f-row{display:grid;grid-template-columns:92px minmax(0,1fr) 64px;gap:10px;align-items:center}
-.f-row .k{font-size:12px;color:var(--fg-2);font-weight:600}
-.f-track{height:26px;background:var(--surface-2);border-radius:4px;position:relative}
-.f-bar{height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
-.f-row .v{text-align:right;font-weight:700}
-.f-conv{font-size:12px;color:var(--muted);padding-left:102px}
-.hbars{display:grid;gap:8px}
-.hb{display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr) 56px;gap:10px;align-items:center;cursor:default;padding:2px 0;border-radius:4px}
-.hb:hover{background:var(--surface-2)}
-.hb .k{font-size:12px;color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hb .t{height:14px}
-.hb .b{height:100%;background:var(--bar);border-radius:0 4px 4px 0;min-width:2px}
-.hb .v{text-align:right;font-size:12px;font-weight:700}
-.tip{position:fixed;pointer-events:none;background:var(--fg);color:var(--bg);font-size:12px;padding:7px 9px;border-radius:6px;z-index:50;max-width:240px;line-height:1.4}
-.empty{padding:28px 16px;text-align:center;color:var(--muted)}
-.empty strong{display:block;color:var(--fg);font-size:15px;margin-bottom:4px}
-
-/* table */
-.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.filters input,.filters select,.form input,.form select,.form textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
-.filters input{width:220px;max-width:100%}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:900px}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;background:var(--surface-2);cursor:pointer;user-select:none;white-space:nowrap}
-th.r,td.r{text-align:right}
-tbody tr{cursor:pointer}
-tbody tr:hover{background:var(--surface-2)}
-.p-name{font-weight:600}
-.p-firm{font-size:12px;color:var(--fg-2)}
-.tier{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-.tier.Platinum{color:var(--teal)} .tier.Gold{color:var(--gold)} .tier.Silver{color:var(--fg-2)}
-
-/* activity */
-.act-form{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,2fr) auto;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
-.act-form select,.act-form input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
-.acts{list-style:none;margin:0;padding:0}
-.acts li{display:grid;grid-template-columns:86px minmax(0,1fr);gap:12px;padding:10px 16px;border-top:1px solid var(--line)}
-.acts li:first-child{border-top:0}
-.acts time{font-size:12px;color:var(--muted)}
-.acts .what{font-weight:600}
-.acts .note{color:var(--fg-2);font-size:13px}
-
-/* modal */
-.overlay{position:fixed;inset:0;background:rgba(10,18,32,.55);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:40}
-.modal{background:var(--surface);border:1px solid var(--line);border-radius:12px;width:100%;max-width:640px}
-.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
-.form label{display:grid;gap:4px;font-size:12px;font-weight:600;color:var(--fg-2);min-width:0}
-.form .full{grid-column:1/-1}
-.form textarea{min-height:70px;resize:vertical}
-.modal-f{display:flex;justify-content:space-between;gap:8px;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
-.modal-f .right{display:flex;gap:8px}
-.confirm-del{color:var(--crit);font-size:12px;align-self:center}
-.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:13px;z-index:60}
-.banner{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:13px}
-
-@media (max-width:1080px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.grid2,.charts{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:640px){
-  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .wrap{padding-inline:16px}
-  .act-form{grid-template-columns:1fr 1fr}
-  .act-form input{grid-column:1/-1}
-  .form{grid-template-columns:1fr}
-  .hb{grid-template-columns:minmax(0,96px) minmax(0,1fr) 48px}
-}
-@media (prefers-reduced-motion:no-preference){.f-bar,.hb .b{transition:width .4s ease}}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--navy);color:var(--on-navy)}
+.top-in{max-width:1180px;margin:0 auto;padding:14px 16px 0;display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-weight:400;font-size:1.55rem;margin:0;letter-spacing:.01em}
+.brand h1 span{color:#D8AE62}
+.sync{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;opacity:.8;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#8a8a8a;display:inline-block}
+.dot.on{background:#5CC98E}.dot.local{background:#E3B54A}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;color:var(--on-navy);opacity:.7;font:600 .9rem var(--body);padding:10px 12px 12px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{opacity:1;border-bottom-color:#D8AE62}
+.tab:focus-visible{outline:2px solid #D8AE62;outline-offset:-2px}
+.tab .badge{background:#B4382F;color:#fff;border-radius:9px;font-size:.7rem;padding:1px 6px;margin-left:4px}
+main{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:18px 60px}
+section.view{display:flex;flex-direction:column;gap:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h2{font-family:var(--display);font-weight:400;font-size:1.25rem;margin:0;text-wrap:balance}
+.panel h3{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 0;font-weight:600}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--mono);font-weight:500;font-size:1.45rem;font-variant-numeric:tabular-nums;color:var(--fg)}
+.kpi span{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi small{color:var(--muted);font-size:.78rem}
+.kpi.gold{border-top:3px solid var(--gold)}
+label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:var(--muted);min-width:0}
+input,select,textarea{font:inherit;font-size:.95rem;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:70px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:0;border-color:var(--teal)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button.b{font:600 .88rem var(--body);border-radius:8px;padding:9px 14px;border:1px solid var(--line);background:var(--surface2);color:var(--fg);cursor:pointer}
+button.b:hover{border-color:var(--teal)}
+button.b:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+button.b.pri{background:var(--teal);border-color:var(--teal);color:#fff}
+button.b.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+button.b.sm{padding:5px 10px;font-size:.8rem}
+button.b.ghost{background:none}
+button.b:disabled{opacity:.5;cursor:default}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;background:var(--surface)}
+.item .txt{min-width:0;flex:1;overflow-wrap:anywhere}
+.item .meta{font-size:.78rem;color:var(--muted)}
+.item.over{border-left:4px solid var(--bad)}
+.item.due{border-left:4px solid var(--warn)}
+.item.fut{border-left:4px solid var(--teal)}
+.chip{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.c-act{background:var(--ok-soft);color:var(--ok)}.c-warm{background:var(--warn-soft);color:var(--warn)}.c-dorm{background:var(--bad-soft);color:var(--bad)}
+.c-new{background:var(--teal-soft);color:var(--teal)}.c-gold{background:var(--gold-soft);color:var(--gold)}
+.c-tier{background:var(--surface2);color:var(--fg)}
+.empty{color:var(--muted);font-size:.9rem;padding:14px;border:1px dashed var(--line);border-radius:8px;text-align:center}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th{text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.cprow{cursor:pointer}
+tr.cprow:hover td{background:var(--surface2)}
+tr.cprow.open td{background:var(--surface2)}
+.bar{height:6px;background:var(--surface2);border-radius:3px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:20px;padding:5px 12px;font:600 .8rem var(--body);cursor:pointer}
+.fchip[aria-pressed="true"]{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}
+:root[data-theme="dark"] .fchip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#16213A}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .fchip[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#16213A}}
+.detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;padding:6px 0}
+.mini{width:100%;font-size:.84rem}
+.mini td,.mini th{padding:5px 6px}
+pre.out{font-family:var(--mono);font-size:.82rem;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-height:520px;overflow:auto}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:12px;margin:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{font-family:var(--display);font-size:1.05rem;padding:0 6px;color:var(--gold)}
+.auto{font-size:.7rem;color:var(--teal);font-weight:600}
+.money-hint{font-size:.72rem;color:var(--muted);font-weight:500;font-family:var(--mono)}
+details{border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+details>summary{cursor:pointer;padding:12px 14px;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"+";color:var(--gold);font-weight:700}
+details[open]>summary::after{content:"–"}
+details>div{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.fact{border-left:3px solid var(--gold);padding:2px 10px}
+.fact b{font-family:var(--display);font-size:1.5rem;font-weight:400;display:block}
+.fact span{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+ul.clean{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.flag{background:var(--warn-soft);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:.85rem;border-left:4px solid var(--warn)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:var(--on-navy);padding:10px 16px;border-radius:8px;font-weight:600;font-size:.9rem;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.answer{white-space:pre-wrap;line-height:1.6;background:var(--surface2);border-radius:8px;padding:14px;min-height:60px}
+.qchips{display:flex;gap:6px;flex-wrap:wrap}
+.calc-out{font-family:var(--mono);font-variant-numeric:tabular-nums;display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.9rem}
+.calc-out b{text-align:right}
+.tpl{cursor:pointer}
+.tpl:hover{border-color:var(--teal)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
-</head>
-<body>
+
 <header class="top">
-  <div class="wrap">
+  <div class="top-in">
     <div class="brand">
-      <small>Alcove Realty · New Kolkata</small>
-      <h1>Channel Partner Coordinator Desk</h1>
+      <h1>Sweta's <span>Second Brain</span></h1>
+      <div class="sync" id="sync"><i class="dot"></i><span>Connecting…</span></div>
     </div>
-    <div class="top-meta">
-      <span id="today" class="num"></span>
-      <span id="storePill" class="store-pill"><i></i><span>Loading…</span></span>
-      <button class="btn sm" id="clearSampleBtn" type="button">Remove samples</button>
-      <button class="btn sm" id="csvBtn" type="button">Export CSV</button>
-      <button class="btn sm" id="exportBtn" type="button">Export backup</button>
-      <button class="btn sm" id="importBtn" type="button">Restore backup</button>
-      <input type="file" id="importFile" accept=".json,application/json" hidden>
-      <button class="btn primary" id="addBtn" type="button">+ Add partner</button>
-    </div>
+    <nav class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-t="today" aria-selected="true">Today</button>
+      <button class="tab" role="tab" data-t="cps">CP Directory</button>
+      <button class="tab" role="tab" data-t="fu">Meetings &amp; Follow-ups <span class="badge" id="fuBadge" hidden></span></button>
+      <button class="tab" role="tab" data-t="report">Daily Report</button>
+      <button class="tab" role="tab" data-t="proj">Projects &amp; Scheme</button>
+      <button class="tab" role="tab" data-t="tpl">Templates</button>
+      <button class="tab" role="tab" data-t="ask">Ask</button>
+    </nav>
   </div>
 </header>
 
-<main class="wrap">
-  <div id="banner" class="banner" hidden></div>
+<main>
+<!-- TODAY -->
+<section class="view" id="v-today">
+  <div class="ph"><h2 style="font-family:var(--display);font-weight:400;font-size:1.6rem;margin:0" id="hello">Good day, Sweta</h2><span class="hint" id="todayDate"></span></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="ph"><h2>Follow-ups due</h2><button class="b sm" data-go="fu">Log a call or meeting</button></div>
+      <div class="list" id="dueList"></div>
+    </div>
+    <div class="panel">
+      <h2>Quick capture</h2>
+      <p class="hint">Anything you don't want to forget: an idea, a CP request, a client detail, a to-do.</p>
+      <textarea id="qcText" placeholder="e.g. Get My Ghar asked for 4 BHK T12 floor plan by Saturday"></textarea>
+      <div class="row">
+        <label>Type<select id="qcType"><option>To-do</option><option>Idea</option><option>CP request</option><option>Client info</option><option>Info</option></select></label>
+        <label>Remind on (optional)<input type="date" id="qcDate"></label>
+      </div>
+      <div class="btns"><button class="b pri" id="qcSave">Save note</button></div>
+      <h3>Recent notes</h3>
+      <div class="list" id="noteList"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>CPs to re-activate</h2><span class="hint">Booked with us before, no booking in Apr–Sep 2026</span></div>
+    <div class="list" id="reactList"></div>
+  </div>
+</section>
 
-  <section class="kpis" aria-label="Summary">
-    <div class="kpi"><div class="lbl">Active partners</div><div class="val num" id="kActive">–</div><div class="sub" id="kActiveSub">of 0 empanelled</div></div>
-    <div class="kpi"><div class="lbl">Leads shared</div><div class="val num" id="kLeads">–</div><div class="sub">all partners, to date</div></div>
-    <div class="kpi"><div class="lbl">Site visits</div><div class="val num" id="kVisits">–</div><div class="sub" id="kVisitsSub">lead → visit 0%</div></div>
-    <div class="kpi"><div class="lbl">Bookings</div><div class="val num" id="kBook">–</div><div class="sub" id="kBookSub">₹0 Cr sales value</div></div>
-    <div class="kpi"><div class="lbl">Brokerage pending</div><div class="val num" id="kComm">–</div><div class="sub" id="kCommSub">₹0 L released</div></div>
-    <div class="kpi" id="kDueCard"><div class="lbl">Follow-ups due</div><div class="val num" id="kDue">–</div><div class="sub" id="kDueSub">0 overdue</div></div>
-  </section>
+<!-- CPS -->
+<section class="view" id="v-cps" hidden>
+  <div class="panel">
+    <div class="ph"><h2>CP Directory</h2><button class="b sm" id="addCpBtn">Add new CP</button></div>
+    <div class="row" id="addCpForm" hidden>
+      <label>Firm / CP name<input id="ncName"></label>
+      <label>Contact person<input id="ncPerson"></label>
+      <label>Phone<input id="ncPhone" inputmode="tel"></label>
+      <label>Area<input id="ncArea"></label>
+      <div class="btns" style="align-items:end"><button class="b pri" id="ncSave">Save CP</button></div>
+    </div>
+    <div class="row">
+      <label>Search<input id="cpSearch" placeholder="Name, person, area…"></label>
+    </div>
+    <div class="filters" id="cpFilters">
+      <button class="fchip" data-f="all" aria-pressed="true">All</button>
+      <button class="fchip" data-f="Active" aria-pressed="false">Active</button>
+      <button class="fchip" data-f="Warm" aria-pressed="false">Warm</button>
+      <button class="fchip" data-f="Dormant" aria-pressed="false">Dormant</button>
+      <button class="fchip" data-f="New" aria-pressed="false">New</button>
+    </div>
+    <p class="hint"><b>Active</b> = booked in Apr–Sep 2026 · <b>Warm</b> = site visits in Apr–Sep 2026 but no booking · <b>Dormant</b> = no activity in Apr–Sep 2026. Tier A = 10+ bookings since Mar 2025, B = 3–9, C = 1–2. Tap a row for details.</p>
+    <div class="scroll"><table id="cpTable"></table></div>
+  </div>
+</section>
+
+<!-- FOLLOW-UPS -->
+<section class="view" id="v-fu" hidden>
+  <div class="grid2">
+    <div class="panel">
+      <h2>Log a call, meeting or visit</h2>
+      <div class="row">
+        <label>Date<input type="date" id="lgDate"></label>
+        <label>Type<select id="lgType"><option>Call</option><option>Meeting</option><option>VC</option><option>Site visit</option><option>WhatsApp</option><option>Email</option></select></label>
+      </div>
+      <label>CP<input id="lgCp" list="cpNames" placeholder="Start typing a CP name"></label>
+      <datalist id="cpNames"></datalist>
+      <label>Client (if any)<input id="lgClient" placeholder="Client name / unit / budget"></label>
+      <label>Purpose<input id="lgPurpose" placeholder="e.g. Brokerage query, new lead, scheme briefing"></label>
+      <label>What happened<textarea id="lgOutcome" placeholder="Key points discussed, outcome"></textarea></label>
+      <div class="row">
+        <label>Next step<input id="lgNext" placeholder="e.g. Share 3 BHK cost sheet"></label>
+        <label>Follow-up date<input type="date" id="lgFu"></label>
+      </div>
+      <label>Client's missing condition (URO)<select id="lgUro"><option value="">—</option><option>Desire</option><option>Conviction</option><option>Financial readiness</option><option>Alignment</option><option>Safety</option></select></label>
+      <div class="btns"><button class="b pri" id="lgSave">Save</button><button class="b ghost" id="lgClear">Clear</button></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>Pending follow-ups</h2><span class="hint" id="pendCount"></span></div>
+      <div class="list" id="pendList"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>History</h2><input id="histSearch" placeholder="Search history" style="max-width:260px"></div>
+    <div class="list" id="histList"></div>
+  </div>
+</section>
+
+<!-- REPORT -->
+<section class="view" id="v-report" hidden>
+  <div class="panel">
+    <div class="ph"><h2>Daily WhatsApp reports</h2>
+      <div class="btns"><button class="b pri" id="rpSave">Save report</button></div></div>
+    <div class="row">
+      <label>Report date<input type="date" id="rpDate"></label>
+      <div class="hint" style="align-self:end" id="rpBaseInfo"></div>
+    </div>
+    <p class="hint">Type only today's numbers. Month totals add up by themselves from your last saved report (and reset on the 1st). You can still overwrite any month figure. Money: type <span style="font-family:var(--mono)">11.38L</span>, <span style="font-family:var(--mono)">3.4Cr</span> or the full rupee amount.</p>
+  </div>
+  <div class="grid2">
+    <div class="panel" id="rpForm"></div>
+    <div class="panel" style="position:sticky;top:120px">
+      <div class="ph"><h2>Sales report</h2><button class="b gold sm" data-copy="salesOut">Copy</button></div>
+      <pre class="out" id="salesOut"></pre>
+      <div class="ph"><h2>CP report (NKS)</h2><button class="b gold sm" data-copy="cpOut">Copy</button></div>
+      <pre class="out" id="cpOut"></pre>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>Saved reports</h2>
+    <div class="list" id="rpHist"></div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="view" id="v-proj" hidden>
+  <div class="panel">
+    <div class="ph"><h2>New Kolkata Sangam</h2><span class="chip c-gold">Serampore · West Bengal 712202</span></div>
+    <div class="facts">
+      <div class="fact"><b>19</b><span>Acres</span></div>
+      <div class="fact"><b>15</b><span>Towers</span></div>
+      <div class="fact"><b>3,500</b><span>Homes</span></div>
+      <div class="fact"><b>180 m</b><span>Private Ganga ghat</span></div>
+      <div class="fact"><b>56K</b><span>Sq ft clubhouse</span></div>
+      <div class="fact"><b>₹50L–1.1Cr</b><span>Price band</span></div>
+    </div>
+    <div class="scroll"><table>
+      <thead><tr><th>Division</th><th>Towers</th><th>Floors</th><th>Units</th></tr></thead>
+      <tbody>
+        <tr><td><b>Signature</b></td><td>1, 2, 3, 9, 10, 11</td><td>G+P1+P2+28</td><td>2 BHK-S 887 / 910 sq ft · 3 BHK 1,039 sq ft</td></tr>
+        <tr><td><b>Suites</b></td><td>4, 12</td><td>G+P1+P2+27</td><td>3 BHK 1,400 sq ft · 4 BHK Premium 2,086 sq ft</td></tr>
+        <tr><td><b>Serenity</b></td><td>5, 6, 7, 13, 14, 15, 16</td><td>G+P1+P2+27</td><td>2 BHK-S 887 / 910 sq ft · 3 BHK 1,039 sq ft</td></tr>
+      </tbody></table></div>
+    <p class="hint">Unit numbers starting ST4 or ST12 are 4 BHK / Suites bookings.</p>
+    <div class="grid2">
+      <div><h3>Parking (over and above unit price)</h3>
+        <table class="mini"><tbody>
+          <tr><td>Dependent (shared access)</td><td class="n">₹4.00 L</td></tr>
+          <tr><td>Independent (standalone bay)</td><td class="n">₹4.75 L</td></tr>
+          <tr><td>Exclusive (premium reserved)</td><td class="n">₹5.25 L</td></tr>
+        </tbody></table>
+        <p class="hint">Covered · CCTV · 24x7 security · EV-charging ready · stilt + podium. Subject to availability.</p></div>
+      <div><h3>Connectivity</h3>
+        <table class="mini"><tbody>
+          <tr><td>Rishra Railway Station</td><td class="n">3 km</td></tr>
+          <tr><td>Ferry Ghat</td><td class="n">3.5 km</td></tr>
+          <tr><td>Sreerampore Railway Station</td><td class="n">4 km</td></tr>
+          <tr><td>Dakshineswar Metro</td><td class="n">12 km</td></tr>
+          <tr><td>Durgapur Expressway</td><td class="n">Nearby</td></tr>
+        </tbody></table></div>
+    </div>
+    <h3>Pitch points</h3>
+    <ul class="clean">
+      <li>180 m private Ganga ghat, exclusive to residents, with Ganga aarti every evening</li>
+      <li>56,000 sq ft grand clubhouse</li>
+      <li>Completed project, so no construction risk; ~3,700 owners already living in the community</li>
+      <li>Serampore: historic colonial town on the Hooghly, reachable by road, rail and river</li>
+    </ul>
+    <label>My notes on Sangam (pricing updates, offers, FAQs)<textarea class="kb" data-kb="sangam" rows="4" placeholder="Add current base price, offers, common client questions…"></textarea></label>
+  </div>
 
   <div class="grid2">
-    <section class="panel" aria-labelledby="qH">
-      <div class="panel-h"><div><h2 id="qH">Follow-up queue</h2><p>Overdue and next 7 days, by follow-up date</p></div></div>
-      <ul class="queue" id="queue"></ul>
-    </section>
-
-    <div class="charts">
-      <section class="panel" aria-labelledby="fH">
-        <div class="panel-h"><div><h2 id="fH">Partner pipeline</h2><p>Leads to bookings, all partners</p></div></div>
-        <div class="panel-b"><div class="funnel" id="funnel"></div></div>
-      </section>
-      <section class="panel" aria-labelledby="tH">
-        <div class="panel-h"><div><h2 id="tH">Top partners</h2><p>Sales value booked, ₹ Cr</p></div></div>
-        <div class="panel-b"><div class="hbars" id="topBars"></div></div>
-      </section>
-    </div>
+    <div class="panel"><h2>Triveni (Mall &amp; Offices)</h2>
+      <p class="hint">No price sheet loaded yet. Keep your Triveni facts here.</p>
+      <textarea class="kb" data-kb="triveni" rows="6" placeholder="Office sizes, rates, availability, leasing status…"></textarea></div>
+    <div class="panel"><h2>Prayag Residences</h2>
+      <p class="hint">No price sheet loaded yet. Keep your Prayag facts here.</p>
+      <textarea class="kb" data-kb="prayag" rows="6" placeholder="Configurations, rates, 20:80 Dream Scheme details…"></textarea></div>
   </div>
 
-  <section class="panel" aria-labelledby="rH">
-    <div class="panel-h">
-      <div><h2 id="rH">Partner register</h2><p id="regCount">0 partners</p></div>
-      <div class="filters">
-        <input id="q" type="search" placeholder="Search name, firm, locality" aria-label="Search partners">
-        <select id="fTier" aria-label="Filter by tier"><option value="">All tiers</option><option>Platinum</option><option>Gold</option><option>Silver</option></select>
-        <select id="fStatus" aria-label="Filter by status"><option value="">All statuses</option><option>Active</option><option>Warm</option><option>Dormant</option><option>Onboarding</option></select>
-      </div>
+  <div class="panel">
+    <div class="ph"><h2>CP brokerage scheme</h2><span class="chip c-warn" style="background:var(--warn-soft);color:var(--warn)">Confirm Oct'26 slabs before sharing</span></div>
+    <div class="flag">The Apr–Sep 2026 scheme ended on 30 Sep. The Oct 2026 – Mar 2027 slabs below are marked <b>Proposed</b> in your CP Workings file.</div>
+    <div class="grid2">
+      <div><h3>Proposed · Oct 2026 – Mar 2027 (half-yearly)</h3>
+        <table class="mini"><thead><tr><th>Revenue</th><th class="n">%</th><th class="n">Units</th></tr></thead><tbody>
+          <tr><td>Up to 1.80 Cr</td><td class="n">2.00%</td><td class="n">1–3</td></tr>
+          <tr><td>1.81 – 4.20 Cr</td><td class="n">2.50%</td><td class="n">4–7</td></tr>
+          <tr><td>4.21 – 6.00 Cr</td><td class="n">3.00%</td><td class="n">8–10</td></tr>
+          <tr><td>6.21 – 7.80 Cr</td><td class="n">3.25%</td><td class="n">11–13</td></tr>
+          <tr><td>7.81 – 9.60 Cr</td><td class="n">3.50%</td><td class="n">14–16</td></tr>
+          <tr><td>9.61 – 12.00 Cr</td><td class="n">3.75%</td><td class="n">17–20</td></tr>
+          <tr><td>12.01 Cr onwards</td><td class="n">4.00%</td><td class="n">20+</td></tr>
+        </tbody></table></div>
+      <div><h3>Apr – Sep 2026 (ended)</h3>
+        <table class="mini"><thead><tr><th>Quarterly revenue</th><th class="n">%</th><th class="n">Units</th></tr></thead><tbody>
+          <tr><td>Up to 1.80 Cr</td><td class="n">2.00%</td><td class="n">1–3</td></tr>
+          <tr><td>1.81 – 3.60 Cr</td><td class="n">2.50%</td><td class="n">4–6</td></tr>
+          <tr><td>3.61 – 5.40 Cr</td><td class="n">3.00%</td><td class="n">7–9</td></tr>
+          <tr><td>5.41 Cr onwards</td><td class="n">3.25%</td><td class="n">10+</td></tr>
+          <tr><td colspan="3" style="color:var(--muted)">Half-yearly kicker: +0.25% (7.75–9.25 Cr) · +0.50% (9.26–11.50 Cr) · +0.75% (11.51 Cr+)</td></tr>
+        </tbody></table></div>
     </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th data-k="name">Partner</th><th data-k="tier">Tier</th><th data-k="status">Status</th><th data-k="locality">Locality</th>
-          <th data-k="leads" class="r">Leads</th><th data-k="visits" class="r">Visits</th><th data-k="bookings" class="r">Bookings</th>
-          <th data-k="valueCr" class="r">Value ₹ Cr</th><th data-k="pendingL" class="r">Pending ₹ L</th><th data-k="lastContact">Last contact</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div id="tblEmpty" class="empty" hidden></div>
-  </section>
+    <p class="hint">Garden unit / 4 BHK / top-floor unit counts as 2 units + ₹20,000 executive incentive.</p>
+    <details><summary>Market comparison (from CP Workings)</summary><div><div class="scroll"><table class="mini">
+      <thead><tr><th>Units</th><th>Alcove</th><th>Sugam Homes</th><th>Shriram Properties</th></tr></thead><tbody>
+      <tr><td>Up to 3</td><td>2.00%</td><td>3.00%</td><td>2.00–2.50%</td></tr>
+      <tr><td>4–6</td><td>2.50%</td><td>3.50%</td><td>2.75–3.25%</td></tr>
+      <tr><td>7–9</td><td>3.00%</td><td>4.00%</td><td>3.50%</td></tr>
+      <tr><td>10+</td><td>3.25%</td><td>4.50%</td><td>3.50%</td></tr>
+      <tr><td>Bonus</td><td>0.25/0.50/0.75% half-yearly</td><td>+0.5% (30+) / +1.0% (35+) yearly</td><td>—</td></tr>
+      <tr><td>Executive incentive</td><td>—</td><td>₹10,000 / sale</td><td>₹10,000 / sale</td></tr>
+      <tr><td>Average price</td><td>63 L</td><td>50 L</td><td>52 L</td></tr></tbody></table></div></div></details>
+    <details><summary>Scheme rules every CP must know</summary><div><ul class="clean">
+      <li>Valid <b>RERA licence</b> is mandatory: no commission invoice and no new enrolment without it.</li>
+      <li>Invoice only after <b>20% payment + sale agreement</b> execution.</li>
+      <li>Brokerage is on apartment consideration minus <b>₹175 / sq ft</b> (infrastructure charge) on saleable area.</li>
+      <li>Payment within <b>30 working days</b> of bill submission. Cancellations are adjusted against future invoices. Additional slabs are retrospective.</li>
+      <li>Planned site visits must be registered in the Google Sheet <b>before 10 AM</b>; later confirmations registered immediately. A direct walk-in without CP registration gets no CP credit.</li>
+      <li><b>Lock-in: 90 days</b> from the first physical visit with the CP. To extend, the CP sends a RENEW tagging email with a WhatsApp snapshot before expiry and before booking.</li>
+      <li><b>Clash policy:</b> first lead date and time wins; if tied, first interaction (over 1 minute) wins.</li>
+      <li>No kickbacks to customers. Referral incentives only up to Alcove's referral scheme value. Campaigns need prior approval. CPs introduce themselves as Authorised Channel Partners, not Alcove staff.</li>
+    </ul></div></details>
+    <details><summary>Older slabs · Oct 2025 – Mar 2026</summary><div><table class="mini"><tbody>
+      <tr><td>Up to 1.65 Cr</td><td class="n">2.50%</td></tr><tr><td>1.66 – 3.85 Cr</td><td class="n">3.00%</td></tr><tr><td>3.86 Cr onwards</td><td class="n">3.25%</td></tr>
+      <tr><td colspan="2" style="color:var(--muted)">Half-yearly: +0.25% (8.75–10.50 Cr) · +0.50% (10.51–11.75 Cr) · +0.75% (11.76 Cr+)</td></tr></tbody></table></div></details>
+  </div>
 
-  <section class="panel" aria-labelledby="aH">
-    <div class="panel-h"><div><h2 id="aH">Activity log</h2><p>Calls, meetings, site visits and bookings with partners</p></div></div>
-    <form class="act-form" id="actForm">
-      <select id="aPartner" aria-label="Partner" required></select>
-      <select id="aType" aria-label="Activity type"><option>Call</option><option>WhatsApp</option><option>Meeting</option><option>Site visit</option><option>Booking</option><option>Brokerage paid</option></select>
-      <input id="aNote" placeholder="What happened? e.g. Shared 3 leads for 4BHK, visit Saturday" aria-label="Note">
-      <button class="btn primary" type="submit">Log</button>
-    </form>
-    <ul class="acts" id="acts"></ul>
-  </section>
+  <div class="grid2">
+    <div class="panel"><h2>Brokerage calculator</h2>
+      <div class="row">
+        <label>Agreement value<input id="bcVal" placeholder="e.g. 63L" inputmode="decimal"></label>
+        <label>Saleable area (sq ft)<input id="bcSqft" inputmode="numeric" placeholder="e.g. 1039"></label>
+      </div>
+      <div class="row">
+        <label>Slab %<select id="bcPct"><option>2.00</option><option selected>2.50</option><option>3.00</option><option>3.25</option><option>3.50</option><option>3.75</option><option>4.00</option></select></label>
+        <label>GST<select id="bcGst"><option value="18">18% (GST-registered CP)</option><option value="0">None (individual)</option></select></label>
+      </div>
+      <div class="calc-out" id="bcOut"></div>
+    </div>
+    <div class="panel"><h2>URO playbook · "Own with Confidence"</h2>
+      <p class="hint">Most NK buyers are 2nd-home buyers. Deals die after the family visit, before token. All 5 conditions must be present: <b>Desire · Conviction · Financial readiness · Alignment · Safety</b>.</p>
+      <div class="scroll"><table class="mini"><thead><tr><th>Element</th><th>Removes</th><th>For</th></tr></thead><tbody>
+        <tr><td><b>E1</b> 15-day full refund</td><td>Token feels risk-free</td><td>All customers</td></tr>
+        <tr><td><b>E2</b> 90-day financial window</td><td>All-or-nothing payment</td><td>Loan-processing buyers</td></tr>
+        <tr><td><b>E2A</b> Interest differential subsidy</td><td>NBFC vs bank rate gap, 6 months</td><td>CIBIL-constrained buyers</td></tr>
+        <tr><td><b>E3</b> Flexible own contribution</td><td>Bridges 10% OCR gap for 90 days</td><td>Liquid shortfall</td></tr>
+        <tr><td><b>E4</b> Rental assurance</td><td>Flat earns until tenant found (max 6 months)</td><td>Investors · Director approval</td></tr>
+        <tr><td><b>E5</b> Cost of inaction</td><td>Shows the cost of waiting</td><td>Undecided buyers</td></tr>
+        <tr><td><b>E6</b> Director's bridge</td><td>Closes ~₹10L budget gap</td><td>Director approval</td></tr>
+        <tr><td><b>E7</b> Moratorium cover (3–6 months)</td><td>EMI pressure</td><td>Director approval</td></tr>
+      </tbody></table></div>
+      <details><summary>The 5 hidden fears</summary><div><ul class="clean">
+        <li><b>Regret:</b> what if this is a mistake?</li><li><b>Liquidity trap:</b> money locked if an emergency hits.</li>
+        <li><b>Social proof gap:</b> resale by existing owners is cheaper.</li><li><b>Commitment weight:</b> token is the gateway to 50–60L + EMI.</li>
+        <li><b>Inertia:</b> walking away costs nothing today.</li></ul></div></details>
+      <details><summary>Weekly rhythm &amp; warm restart</summary><div><ul class="clean">
+        <li><b>Fri–Sun:</b> execution (site visits, family visits, token talks). <b>Mon:</b> data review. <b>Tue:</b> learning. <b>Wed:</b> weekend prep. <b>Thu:</b> confirm weekend appointments.</li>
+        <li>Pipeline buckets: <b>Hot</b> (stalled after family visit, reason maps to E1–E4) · <b>Warm</b> (visited, reason unclear) · <b>Cold–financial</b> (E2A/E3/E6) · <b>Dead</b>.</li>
+        <li>Log every visit the same evening: prospect, visit type, elements used, outcome, obstacle, missing condition, next action.</li></ul></div></details>
+    </div>
+  </div>
+</section>
+
+<!-- TEMPLATES -->
+<section class="view" id="v-tpl" hidden>
+  <div class="grid2">
+    <div class="panel"><div class="ph"><h2>Message templates</h2><button class="b sm" id="tplNew">New template</button></div>
+      <p class="hint">Tap a template to open it. Replace the [brackets], then copy into WhatsApp or email.</p>
+      <div class="list" id="tplList"></div></div>
+    <div class="panel"><h2 id="tplTitle">Editor</h2>
+      <label>Template name<input id="tplName"></label>
+      <label>Message<textarea id="tplBody" rows="14"></textarea></label>
+      <div class="btns"><button class="b gold" id="tplCopy">Copy message</button><button class="b" id="tplSaveBtn">Save as my template</button><button class="b ghost" id="tplDel" hidden>Delete</button></div></div>
+  </div>
+</section>
+
+<!-- ASK -->
+<section class="view" id="v-ask" hidden>
+  <div class="panel">
+    <h2>Ask your second brain</h2>
+    <p class="hint">Claude answers using everything on this page: project facts, scheme rules, CP performance, your logs, notes and reports.</p>
+    <div class="qchips" id="qchips"></div>
+    <textarea id="askQ" placeholder="e.g. Which CPs had site visits but no booking this half? Draft a WhatsApp to each."></textarea>
+    <div class="btns"><button class="b pri" id="askBtn">Ask</button><button class="b" id="askSave" hidden>Save answer to notes</button></div>
+    <div class="answer" id="askOut" hidden></div>
+    <p class="hint" id="askNA" hidden>Asking Claude isn't available in this view. Open the page on claude.ai to use it.</p>
+  </div>
+</section>
 </main>
-
-<div class="overlay" id="overlay" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
-    <div class="panel-h"><div><h2 id="mTitle">Add partner</h2><p>Brokerage figures in ₹ lakh, sales value in ₹ crore</p></div></div>
-    <form id="pForm">
-      <div class="form">
-        <label>Partner name<input id="pName" required></label>
-        <label>Firm<input id="pFirm"></label>
-        <label>Phone<input id="pPhone" inputmode="tel"></label>
-        <label>RERA no.<input id="pRera"></label>
-        <label>Locality<input id="pLocality" placeholder="e.g. Rajarhat, Salt Lake"></label>
-        <label>Tier<select id="pTier"><option>Platinum</option><option>Gold</option><option selected>Silver</option></select></label>
-        <label>Status<select id="pStatus"><option>Active</option><option>Warm</option><option>Dormant</option><option selected>Onboarding</option></select></label>
-        <label>Leads shared<input id="pLeads" type="number" min="0" value="0"></label>
-        <label>Site visits<input id="pVisits" type="number" min="0" value="0"></label>
-        <label>Bookings<input id="pBookings" type="number" min="0" value="0"></label>
-        <label>Sales value (₹ Cr)<input id="pValue" type="number" min="0" step="0.01" value="0"></label>
-        <label>Brokerage earned (₹ L)<input id="pComm" type="number" min="0" step="0.01" value="0"></label>
-        <label>Brokerage paid (₹ L)<input id="pPaid" type="number" min="0" step="0.01" value="0"></label>
-        <label>Last contact<input id="pLast" type="date"></label>
-        <label>Next follow-up<input id="pNext" type="date"></label>
-        <label class="full">Notes<textarea id="pNotes"></textarea></label>
-      </div>
-      <div class="modal-f">
-        <div><button class="btn" type="button" id="delBtn" hidden>Delete</button> <span class="confirm-del" id="delMsg" hidden>Click Delete again to remove this partner.</span></div>
-        <div class="right"><button class="btn" type="button" id="cancelBtn">Cancel</button><button class="btn primary" type="submit" id="saveBtn">Save partner</button></div>
-      </div>
-    </form>
-  </div>
-</div>
-<div class="tip" id="tip" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
-const $ = id => document.getElementById(id);
-const state = { partners: [], acts: [], sort: { k: "nextFollowUp", dir: 1 }, editing: null, delArmed: false };
-let db = null, canWrite = true;
+"use strict";
+const CPDATA = [{"name":"Elegance Enterprises","p":{"a":{"b":14,"v":76796500,"sv":null},"b":{"b":10,"v":59840500,"sv":61},"c":{"b":5,"v":30829000,"sv":28}}},{"name":"Somani Realtors","p":{"a":{"b":14,"v":70426000,"sv":null},"b":{"b":5,"v":26381500,"sv":63},"c":{"b":4,"v":22354500,"sv":25}}},{"name":"Get My Ghar","p":{"a":{"b":3,"v":14610000,"sv":null},"b":{"b":4,"v":25385500,"sv":14},"c":{"b":8,"v":50375000,"sv":34}}},{"name":"360 Realtors LLP","p":{"a":{"b":6,"v":35539500,"sv":null},"b":{"b":2,"v":15325000,"sv":23},"c":{"b":2,"v":10483000,"sv":24}}},{"name":"Lightship Advisors (Homestore)","p":{"a":{"b":2,"v":14529000,"sv":null},"b":{"b":2,"v":11857500,"sv":6},"c":{"b":4,"v":28645000,"sv":11}}},{"name":"Murti Realty","p":{"a":{"b":3,"v":14846000,"sv":null},"b":{"b":4,"v":25317000,"sv":11},"c":{"b":1,"v":5943000,"sv":13}}},{"name":"Dreamweavers Realty","p":{"a":{"b":4,"v":23306000,"sv":null},"b":{"b":3,"v":16907500,"sv":8},"c":{"b":1,"v":5645000,"sv":24}}},{"name":"Anirban Manna","p":{"a":{"b":2,"v":12740000,"sv":null},"b":{"b":3,"v":17503500,"sv":12},"c":{"b":1,"v":6785000,"sv":6}}},{"name":"AR Realtors (Alok Roy)","p":{"a":{"b":1,"v":7058000,"sv":null},"b":{"b":4,"v":21797500,"sv":7},"c":{"b":0,"v":0,"sv":0}}},{"name":"Wordsmith Realty","p":{"a":{"b":2,"v":13144500,"sv":null},"b":{"b":1,"v":5150000,"sv":8},"c":{"b":2,"v":10318000,"sv":1}}},{"name":"Upvalue Marketing","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":6221000,"sv":null},"c":{"b":2,"v":18750000,"sv":null}}},{"name":"Dynamic Realty Ventures","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":4,"v":24625500,"sv":null}}},{"name":"Shekhar Agarwal","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":3,"v":19089500,"sv":null}}},{"name":"Rajen Ram","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":9977000,"sv":3},"c":{"b":1,"v":5640000,"sv":4}}},{"name":"Sanchaita Bhattacharjee (DP Housing)","p":{"a":{"b":1,"v":7259000,"sv":null},"b":{"b":0,"v":0,"sv":11},"c":{"b":1,"v":6075000,"sv":7}}},{"name":"Deepak Kumar Shaw","p":{"a":{"b":1,"v":5866500,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":1,"v":7355000,"sv":null}}},{"name":"Shammi Ahmed","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":2},"c":{"b":2,"v":12255500,"sv":0}}},{"name":"Anarock","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":2,"v":11560000,"sv":null}}},{"name":"Evernal Properties","p":{"a":{"b":1,"v":5050000,"sv":null},"b":{"b":0,"v":0,"sv":4},"c":{"b":1,"v":6011000,"sv":1}}},{"name":"Sunil Tiwari","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":9886000,"sv":null},"c":{"b":0,"v":0,"sv":null}}},{"name":"Rajesh Pramanik","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":8045000,"sv":null},"c":{"b":0,"v":0,"sv":null}}},{"name":"NK Realtors","p":{"a":{"b":1,"v":7427000,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"Exact Match Properties","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":7300000,"sv":null},"c":{"b":0,"v":0,"sv":null}}},{"name":"Word of Mouth","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":1,"v":6400000,"sv":null}}},{"name":"Classified Property (Sovon Biswas)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":5973000,"sv":2},"c":{"b":0,"v":0,"sv":0}}},{"name":"Abhishek Shaw","p":{"a":{"b":1,"v":5275000,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":8}}},{"name":"Abhishek Tewary","p":{"a":{"b":1,"v":5275000,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":2}}},{"name":"And Beyond","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":1,"v":5263500,"sv":null},"c":{"b":0,"v":0,"sv":null}}},{"name":"Estates 21","p":{"a":{"b":1,"v":4807500,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":11}}},{"name":"Blox (Method and Madness)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":1,"v":4575000,"sv":null}}},{"name":"SP Housing","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":null},"c":{"b":1,"v":4300000,"sv":null}}},{"name":"MG Global","p":{"a":{"b":1,"v":4150000,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":9}}},{"name":"A.R. Realtors (Ramkrishna Sil)","p":{"a":{"b":1,"v":3975000,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"Star Infra (Gita Sharma)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":4}}},{"name":"Tuhin Podder (Perfect Address)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":2}}},{"name":"Kkrishiv Realtors (Akash Mondal)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"SR Realty (Jyoti Ganguly)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"Haimanti Dey (Special Hub Realtors)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"Resolute Realty","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"One View Realty","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":1},"c":{"b":0,"v":0,"sv":0}}},{"name":"Flat Booking (Tapas Bhattacharjee)","p":{"a":{"b":0,"v":0,"sv":null},"b":{"b":0,"v":0,"sv":2},"c":{"b":0,"v":0,"sv":0}}}];
+const PERIODS = {a:"Mar–Sep 2025", b:"Oct 2025–Mar 2026", c:"Apr–Sep 2026"};
 
-const pad = n => String(n).padStart(2, "0");
-const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const iso = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const TODAY = iso(new Date());
-const addDays = (s, n) => { const d = new Date(s + "T00:00:00"); d.setDate(d.getDate() + n); return iso(d); };
-const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 864e5);
-const fmtDate = s => s ? new Date(s + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—";
-const n = v => Number(v) || 0;
-const inr = (v, d = 2) => n(v).toLocaleString("en-IN", { maximumFractionDigits: d, minimumFractionDigits: 0 });
-const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "–";
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-$("today").textContent = new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
-
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2400); }
-function setStore(live, text) { $("storePill").classList.toggle("live", live); $("storePill").lastElementChild.textContent = text; }
-function banner(msg) { $("banner").textContent = msg; $("banner").hidden = !msg; }
-
-/* ---------- render ---------- */
-function render() { renderKpis(); renderQueue(); renderFunnel(); renderTop(); renderTable(); renderPartnerSelect(); renderActs(); }
-
-function totals() {
-  const P = state.partners, t = { leads: 0, visits: 0, bookings: 0, value: 0, comm: 0, paid: 0 };
-  P.forEach(p => { t.leads += n(p.leads); t.visits += n(p.visits); t.bookings += n(p.bookings); t.value += n(p.valueCr); t.comm += n(p.commissionL); t.paid += n(p.paidL); });
-  return t;
+const dmy = s => s ? s.slice(8,10)+"."+s.slice(5,7)+"."+s.slice(0,4) : "";
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,80) || "cp";
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200)}
+function parseMoney(v){
+  if(v==null) return 0; let s=String(v).trim().toLowerCase().replace(/,/g,"").replace(/₹|rs\.?/g,"").trim();
+  if(!s) return 0; const m=s.match(/^(-?[\d.]+)\s*(cr|crore|crores|l|lac|lacs|lakh|lakhs|k)?\.?$/);
+  if(!m) return 0; const n=parseFloat(m[1]); if(isNaN(n)) return 0;
+  const u=m[2]||""; if(u.startsWith("c")) return n*1e7; if(u.startsWith("l")) return n*1e5; if(u==="k") return n*1e3; return n;
+}
+function indian(n,dec=2){ if(!n) return "0"; return Number(n).toLocaleString("en-IN",{minimumFractionDigits:dec,maximumFractionDigits:dec}) }
+function short(n){ if(!n) return "NIL"; return n>=1e7 ? (n/1e7).toFixed(2)+" Cr." : (n/1e5).toFixed(2)+" LACS" }
+function crL(n){ if(!n) return "—"; return n>=1e7 ? "₹"+(n/1e7).toFixed(2)+" Cr" : "₹"+(n/1e5).toFixed(1)+" L" }
+async function copyText(txt){
+  try{ await navigator.clipboard.writeText(txt); toast("Copied. Paste it into WhatsApp."); }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");toast("Copied");}catch(_){toast("Select the text and copy it manually")} ta.remove(); }
 }
 
-function renderKpis() {
-  const P = state.partners, t = totals();
-  $("kActive").textContent = P.filter(p => p.status === "Active").length;
-  $("kActiveSub").textContent = `of ${P.length} empanelled`;
-  $("kLeads").textContent = inr(t.leads, 0);
-  $("kVisits").textContent = inr(t.visits, 0);
-  $("kVisitsSub").textContent = `lead → visit ${pct(t.visits, t.leads)}`;
-  $("kBook").textContent = inr(t.bookings, 0);
-  $("kBookSub").textContent = `₹${inr(t.value)} Cr sales value`;
-  $("kComm").textContent = "₹" + inr(Math.max(0, t.comm - t.paid)) + " L";
-  $("kCommSub").textContent = `₹${inr(t.paid)} L released of ₹${inr(t.comm)} L`;
-  const due = P.filter(p => p.nextFollowUp && p.nextFollowUp <= TODAY);
-  const over = due.filter(p => p.nextFollowUp < TODAY).length;
-  $("kDue").textContent = due.length;
-  $("kDueSub").textContent = `${over} overdue · ${due.length - over} today`;
-  $("kDueCard").classList.toggle("alert", over > 0);
-}
-
-function dueChip(d) {
-  if (!d) return `<span class="chip neutral">No date</span>`;
-  const diff = daysBetween(TODAY, d);
-  if (diff < 0) return `<span class="chip crit">⚠ ${-diff}d overdue</span>`;
-  if (diff === 0) return `<span class="chip warn">● Today</span>`;
-  return `<span class="chip neutral">in ${diff}d · ${fmtDate(d)}</span>`;
-}
-
-function renderQueue() {
-  const limit = addDays(TODAY, 7);
-  const list = state.partners.filter(p => p.nextFollowUp && p.nextFollowUp <= limit).sort((a, b) => a.nextFollowUp.localeCompare(b.nextFollowUp));
-  const ul = $("queue");
-  if (!state.partners.length) { ul.innerHTML = `<li style="display:block"><div class="empty"><strong>No partners yet</strong>Add your first channel partner with “+ Add partner”. Their follow-up dates will queue up here.</div></li>`; return; }
-  if (!list.length) { ul.innerHTML = `<li style="display:block"><div class="empty"><strong>All caught up</strong>No follow-ups due in the next 7 days.</div></li>`; return; }
-  ul.innerHTML = list.map(p => `
-    <li>
-      <div>${dueChip(p.nextFollowUp)}</div>
-      <div style="min-width:0">
-        <div class="q-name">${esc(p.name)} ${p.sample ? '<span class="chip sample">Sample</span>' : ""}</div>
-        <div class="q-meta">${esc(p.firm || "")}${p.phone ? " · <span class='num'>" + esc(p.phone) + "</span>" : ""} · last spoke ${p.lastContact ? daysBetween(p.lastContact, TODAY) + "d ago" : "never"}</div>
-      </div>
-      <button class="btn sm" type="button" data-done="${esc(p.id)}" ${canWrite ? "" : "disabled"} title="Mark contacted today and set next follow-up in 7 days">Done · +7d</button>
-    </li>`).join("");
-}
-
-function renderFunnel() {
-  const t = totals(), el = $("funnel");
-  if (!state.partners.length) { el.innerHTML = `<div class="empty">The pipeline fills in once partners are added.</div>`; return; }
-  const max = Math.max(t.leads, 1);
-  const rows = [["Leads", t.leads], ["Site visits", t.visits], ["Bookings", t.bookings]];
-  el.innerHTML = rows.map(([k, v], i) => `
-    <div class="f-row" data-tip="${k}: ${inr(v, 0)}${i ? " · " + pct(v, rows[i - 1][1]) + " of " + rows[i - 1][0].toLowerCase() : ""}">
-      <span class="k">${k}</span>
-      <div class="f-track"><div class="f-bar" style="width:${v / max * 100}%"></div></div>
-      <span class="v num">${inr(v, 0)}</span>
-    </div>`).join("") +
-    `<div class="f-conv num">Lead → visit ${pct(t.visits, t.leads)} · Visit → booking ${pct(t.bookings, t.visits)} · Avg ticket ₹${t.bookings ? inr(t.value / t.bookings) : "–"} Cr</div>`;
-}
-
-function renderTop() {
-  const el = $("topBars");
-  const top = state.partners.filter(p => n(p.valueCr) > 0).sort((a, b) => n(b.valueCr) - n(a.valueCr)).slice(0, 7);
-  if (!top.length) { el.innerHTML = `<div class="empty">No bookings recorded yet.</div>`; return; }
-  const max = n(top[0].valueCr);
-  el.innerHTML = top.map(p => `
-    <div class="hb" data-tip="${esc(p.name)} (${esc(p.tier)}) · ${n(p.bookings)} bookings · ₹${inr(p.valueCr)} Cr · conv. ${pct(n(p.bookings), n(p.visits))} of visits">
-      <span class="k">${esc(p.name)}</span>
-      <div class="t"><div class="b" style="width:${n(p.valueCr) / max * 100}%"></div></div>
-      <span class="v num">${inr(p.valueCr)}</span>
-    </div>`).join("");
-}
-
-const statusChip = s => `<span class="chip ${{ Active: "good", Warm: "warn", Dormant: "crit", Onboarding: "gold" }[s] || "neutral"}">${{ Active: "●", Warm: "◐", Dormant: "○", Onboarding: "+" }[s] || ""} ${esc(s || "—")}</span>`;
-
-function renderTable() {
-  const q = $("q").value.trim().toLowerCase(), ft = $("fTier").value, fs = $("fStatus").value;
-  let rows = state.partners.map(p => ({ ...p, pendingL: n(p.commissionL) - n(p.paidL) }))
-    .filter(p => (!ft || p.tier === ft) && (!fs || p.status === fs) && (!q || [p.name, p.firm, p.locality].join(" ").toLowerCase().includes(q)));
-  const { k, dir } = state.sort;
-  rows.sort((a, b) => { const x = a[k] ?? "", y = b[k] ?? ""; return (typeof x === "number" || typeof y === "number" ? n(x) - n(y) : String(x).localeCompare(String(y))) * dir; });
-  $("regCount").textContent = `${rows.length} of ${state.partners.length} partners · click a row to edit`;
-  document.querySelectorAll("th[data-k]").forEach(th => { th.textContent = th.textContent.replace(/ [▲▼]$/, ""); if (th.dataset.k === k) th.textContent += dir > 0 ? " ▲" : " ▼"; });
-  $("tbody").innerHTML = rows.map(p => {
-    const since = p.lastContact ? daysBetween(p.lastContact, TODAY) : null;
-    return `<tr data-id="${esc(p.id)}" tabindex="0">
-      <td><div class="p-name">${esc(p.name)} ${p.sample ? '<span class="chip sample">Sample</span>' : ""}</div><div class="p-firm">${esc(p.firm || "")}</div></td>
-      <td><span class="tier ${esc(p.tier)}">${esc(p.tier || "")}</span></td>
-      <td>${statusChip(p.status)}</td>
-      <td>${esc(p.locality || "")}</td>
-      <td class="r num">${inr(p.leads, 0)}</td><td class="r num">${inr(p.visits, 0)}</td><td class="r num">${inr(p.bookings, 0)}</td>
-      <td class="r num">${inr(p.valueCr)}</td><td class="r num">${p.pendingL > 0 ? inr(p.pendingL) : "—"}</td>
-      <td class="num">${fmtDate(p.lastContact)}${since !== null && since > 21 ? ` <span class="chip crit">${since}d</span>` : ""}</td>
-    </tr>`;
-  }).join("");
-  const empty = $("tblEmpty");
-  empty.hidden = rows.length > 0;
-  empty.innerHTML = state.partners.length ? "<strong>No matches</strong>Try a different search or clear the filters." : "<strong>Your partner register is empty</strong>Use “+ Add partner” to empanel your first broker.";
-}
-
-function renderPartnerSelect() {
-  const sel = $("aPartner"), cur = sel.value;
-  sel.innerHTML = `<option value="">Choose partner…</option>` + [...state.partners].sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
-  sel.value = cur;
-}
-
-function renderActs() {
-  const ul = $("acts");
-  if (!state.acts.length) { ul.innerHTML = `<li style="display:block"><div class="empty"><strong>No activity logged</strong>Log a call, meeting or site visit above. It also updates that partner’s last-contact date.</div></li>`; return; }
-  ul.innerHTML = state.acts.map(a => `<li>
-    <time class="num">${fmtDate(a.date)}</time>
-    <div style="min-width:0"><div class="what">${esc(a.type)} · ${esc(a.partnerName)} ${a.sample ? '<span class="chip sample">Sample</span>' : ""}</div>${a.note ? `<div class="note">${esc(a.note)}</div>` : ""}</div>
-  </li>`).join("");
-}
-
-/* ---------- tooltip ---------- */
-document.addEventListener("mousemove", e => {
-  const t = e.target.closest("[data-tip]"), tip = $("tip");
-  if (!t) { tip.hidden = true; return; }
-  tip.textContent = t.dataset.tip; tip.hidden = false;
-  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
-  tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
-});
-
-/* ---------- interactions ---------- */
-["q", "fTier", "fStatus"].forEach(id => $(id).addEventListener("input", renderTable));
-document.querySelectorAll("th[data-k]").forEach(th => th.addEventListener("click", () => {
-  const k = th.dataset.k; state.sort = { k, dir: state.sort.k === k ? -state.sort.dir : 1 }; renderTable();
-}));
-$("tbody").addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) openModal(tr.dataset.id); });
-$("tbody").addEventListener("keydown", e => { if (e.key === "Enter") { const tr = e.target.closest("tr[data-id]"); if (tr) openModal(tr.dataset.id); } });
-$("addBtn").addEventListener("click", () => openModal(null));
-$("cancelBtn").addEventListener("click", closeModal);
-$("overlay").addEventListener("click", e => { if (e.target === $("overlay")) closeModal(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("overlay").hidden) closeModal(); });
-
-const F = { name: "pName", firm: "pFirm", phone: "pPhone", rera: "pRera", locality: "pLocality", tier: "pTier", status: "pStatus", leads: "pLeads", visits: "pVisits", bookings: "pBookings", valueCr: "pValue", commissionL: "pComm", paidL: "pPaid", lastContact: "pLast", nextFollowUp: "pNext", notes: "pNotes" };
-const NUMS = ["leads", "visits", "bookings", "valueCr", "commissionL", "paidL"];
-
-function openModal(id) {
-  const p = id ? state.partners.find(x => x.id === id) : null;
-  state.editing = id; state.delArmed = false;
-  $("mTitle").textContent = p ? "Edit partner" : "Add partner";
-  const blank = { tier: "Silver", status: "Onboarding", lastContact: TODAY, nextFollowUp: addDays(TODAY, 3) };
-  Object.entries(F).forEach(([k, el]) => { const v = (p || blank)[k]; $(el).value = v ?? (NUMS.includes(k) ? 0 : ""); });
-  $("delBtn").hidden = !p || !canWrite; $("delMsg").hidden = true;
-  $("saveBtn").disabled = !canWrite;
-  $("overlay").hidden = false; $("pName").focus();
-}
-function closeModal() { $("overlay").hidden = true; state.editing = null; }
-
-$("pForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  if (!db) return;
-  const body = {};
-  Object.entries(F).forEach(([k, el]) => { body[k] = NUMS.includes(k) ? n($(el).value) : $(el).value.trim(); });
-  const old = state.editing ? state.partners.find(x => x.id === state.editing) : null;
-  if (old?.sample) body.sample = true;
-  try {
-    $("saveBtn").disabled = true;
-    if (state.editing) await db.doc("partners/" + state.editing).set(body);
-    else await db.collection("partners").add(body);
-    toast(state.editing ? "Partner updated" : "Partner added");
-    closeModal();
-  } catch (err) { writeError(err); } finally { $("saveBtn").disabled = !canWrite; }
-});
-
-$("delBtn").addEventListener("click", async () => {
-  if (!state.delArmed) { state.delArmed = true; $("delMsg").hidden = false; return; }
-  try { await db.doc("partners/" + state.editing).delete(); toast("Partner removed"); closeModal(); } catch (err) { writeError(err); }
-});
-
-$("queue").addEventListener("click", async e => {
-  const b = e.target.closest("[data-done]"); if (!b || !db) return;
-  const p = state.partners.find(x => x.id === b.dataset.done); if (!p) return;
-  b.disabled = true;
-  try {
-    await db.doc("partners/" + p.id).update({ lastContact: TODAY, nextFollowUp: addDays(TODAY, 7) });
-    await db.collection("activity").add({ partnerId: p.id, partnerName: p.name, type: "Follow-up done", note: "Next follow-up set for " + fmtDate(addDays(TODAY, 7)), date: TODAY, ts: Date.now() });
-    toast(`${p.name}: next follow-up ${fmtDate(addDays(TODAY, 7))}`);
-  } catch (err) { writeError(err); b.disabled = false; }
-});
-
-$("actForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  if (!db) return;
-  const p = state.partners.find(x => x.id === $("aPartner").value);
-  if (!p) { toast("Choose a partner first."); return; }
-  try {
-    await db.collection("activity").add({ partnerId: p.id, partnerName: p.name, type: $("aType").value, note: $("aNote").value.trim(), date: TODAY, ts: Date.now() });
-    if (p.lastContact !== TODAY) await db.doc("partners/" + p.id).update({ lastContact: TODAY });
-    $("aNote").value = ""; toast("Activity logged");
-  } catch (err) { writeError(err); }
-});
-
-function writeError() {
-  toast("Couldn’t save. Check that this browser allows site data, and use Export backup to keep a copy.");
-}
-
-/* ---------- local store (saves in this browser) ---------- */
-const KEY = "alcove-cp-desk-v1";
-const SAMPLE = {
-  partners: {
-    "sample-1": { sample: true, name: "Eastline Realty", firm: "Sample partner", phone: "98300 00001", locality: "Rajarhat", tier: "Platinum", status: "Active", leads: 42, visits: 19, bookings: 5, valueCr: 11.8, commissionL: 23.6, paidL: 14, lastContact: addDays(TODAY, -4), nextFollowUp: addDays(TODAY, -1), notes: "Example record. Delete when you add real partners." },
-    "sample-2": { sample: true, name: "Hooghly Homes", firm: "Sample partner", phone: "98300 00002", locality: "Salt Lake", tier: "Gold", status: "Active", leads: 28, visits: 11, bookings: 3, valueCr: 6.9, commissionL: 13.8, paidL: 13.8, lastContact: addDays(TODAY, -2), nextFollowUp: TODAY, notes: "Example record." },
-    "sample-3": { sample: true, name: "NewTown Prime Estates", firm: "Sample partner", phone: "98300 00003", locality: "New Town", tier: "Gold", status: "Warm", leads: 17, visits: 6, bookings: 1, valueCr: 2.4, commissionL: 4.8, paidL: 0, lastContact: addDays(TODAY, -15), nextFollowUp: addDays(TODAY, 2), notes: "Example record." },
-    "sample-4": { sample: true, name: "Southern Avenue Advisors", firm: "Sample partner", phone: "98300 00004", locality: "Ballygunge", tier: "Silver", status: "Dormant", leads: 6, visits: 1, bookings: 0, valueCr: 0, commissionL: 0, paidL: 0, lastContact: addDays(TODAY, -40), nextFollowUp: addDays(TODAY, -6), notes: "Example record." },
-    "sample-5": { sample: true, name: "Bypass Property Desk", firm: "Sample partner", phone: "98300 00005", locality: "EM Bypass", tier: "Silver", status: "Onboarding", leads: 2, visits: 0, bookings: 0, valueCr: 0, commissionL: 0, paidL: 0, lastContact: addDays(TODAY, -1), nextFollowUp: addDays(TODAY, 4), notes: "Example record." }
-  },
-  activity: {
-    "sample-a1": { sample: true, partnerId: "sample-2", partnerName: "Hooghly Homes", type: "Site visit", note: "Example: 2 families toured the 4BHK show flat.", date: addDays(TODAY, -2), ts: Date.now() - 2 * 864e5 },
-    "sample-a2": { sample: true, partnerId: "sample-1", partnerName: "Eastline Realty", type: "Booking", note: "Example: 1 booking confirmed, tower B.", date: addDays(TODAY, -4), ts: Date.now() - 4 * 864e5 }
+/* ---------- store: shared db when available, this-device storage otherwise ---------- */
+const COLLS = ["logs","notes","cpinfo","reports","templates","kb"];
+const S = {}; COLLS.forEach(c=>S[c]=[]);
+let db = null, mode = "local", canWrite = true;
+const LKEY = "sb2-";
+function lload(){ COLLS.forEach(c=>{ try{ S[c]=JSON.parse(localStorage.getItem(LKEY+c)||"[]") }catch(e){ S[c]=[] } }) }
+function lsave(c){ try{ localStorage.setItem(LKEY+c, JSON.stringify(S[c])) }catch(e){} }
+function setSync(){ const el=$("#sync"); el.innerHTML = mode==="db" ? '<i class="dot on"></i><span>Saved · syncs to all your devices</span>' : '<i class="dot local"></i><span>Saved on this device only</span>' }
+async function put(c,id,data){
+  data = {...data, updatedAt: new Date().toISOString()};
+  if(mode==="db"){
+    try{ await db.collection(c).doc(id).set(data); return true }
+    catch(e){ toast(e && e.code==="quota_exceeded" ? "Storage is full. Delete some old entries." : "Couldn't save. Check your connection and try again."); return false }
   }
-};
-let store = null, persisted = true;
-try { store = JSON.parse(localStorage.getItem(KEY)); } catch (e) { persisted = false; }
-if (!store || !store.partners || !store.activity) store = JSON.parse(JSON.stringify(SAMPLE));
+  const i=S[c].findIndex(x=>x.id===id); const row={id,...data};
+  if(i>=0) S[c][i]=row; else S[c].push(row); lsave(c); renderAll(); return true;
+}
+async function del(c,id){
+  if(mode==="db"){ try{ await db.collection(c).doc(id).delete() }catch(e){ toast("Couldn't delete. Try again.") } return }
+  S[c]=S[c].filter(x=>x.id!==id); lsave(c); renderAll();
+}
+const newId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 
-function commit() {
-  try { localStorage.setItem(KEY, JSON.stringify(store)); }
-  catch (e) { persisted = false; setStore(false, "Not saving"); banner("This browser is blocking storage, so changes will be lost when you close the page. Use Export backup to keep a copy."); }
-  sync();
+async function initStore(){
+  lload(); setSync(); renderAll(); maybePrefillReport();
+  let got=null;
+  try{ if(window.claude && typeof window.claude.use==="function") got = await window.claude.use("db"); }catch(e){ got=null }
+  if(!got){ setSync(); return }
+  db=got; mode="db"; setSync();
+  COLLS.forEach(c=>{
+    db.collection(c).onSnapshot(snap=>{
+      S[c]=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(c==="reports") maybePrefillReport();
+      renderAll();
+    }, err=>{ console.warn("db",c,err&&err.code) });
+  });
 }
-function sync() {
-  state.partners = Object.entries(store.partners).map(([id, d]) => ({ id, ...d }));
-  state.acts = Object.entries(store.activity).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.ts - a.ts).slice(0, 60);
-  render();
+
+/* ---------- CP model ---------- */
+function cpList(){
+  const info = Object.fromEntries(S.cpinfo.map(x=>[x.id,x]));
+  const list = CPDATA.map(c=>{
+    const id=slug(c.name), p=c.p, tb=p.a.b+p.b.b+p.c.b, tv=p.a.v+p.b.v+p.c.v;
+    const status = p.c.b>0 ? "Active" : (p.c.sv>0 ? "Warm" : "Dormant");
+    const tier = tb>=10?"A":tb>=3?"B":tb>=1?"C":"–";
+    return {id,name:c.name,p,tb,tv,status,tier,info:info[id]||{}};
+  });
+  S.cpinfo.filter(x=>x.custom && !list.find(l=>l.id===x.id)).forEach(x=>{
+    list.push({id:x.id,name:x.name,p:null,tb:0,tv:0,status:"New",tier:"–",info:x});
+  });
+  return list;
 }
-const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-db = {
-  doc(path) {
-    const [col, id] = path.split("/");
-    return {
-      set: async d => { store[col][id] = { ...d }; commit(); },
-      update: async d => { if (!store[col][id]) throw new Error("missing"); Object.assign(store[col][id], d); commit(); },
-      delete: async () => { delete store[col][id]; commit(); }
-    };
-  },
-  collection(col) {
-    return { add: async d => { const id = newId(); store[col][id] = { ...d }; commit(); return { id }; } };
+function lastContact(name){
+  const n=name.toLowerCase(); let best="";
+  S.logs.forEach(l=>{ if((l.cp||"").toLowerCase()===n && (l.date||"")>best) best=l.date });
+  return best;
+}
+
+/* ---------- TODAY ---------- */
+function latestReport(before){ return S.reports.filter(r=>!before || r.date<before).sort((a,b)=>b.date<a.date?-1:1)[0] }
+function renderToday(){
+  const h=new Date().getHours(); $("#hello").textContent=(h<12?"Good morning":h<17?"Good afternoon":"Good evening")+", Sweta";
+  $("#todayDate").textContent=new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const r=latestReport(); const v=r? r.v : null;
+  const mv = v ? (parseMoney(v.s_mPlotA)+parseMoney(v.s_mPlotB)) : 0;
+  const k=[
+    ["CP bookings · Apr–Sep 26","48","₹29.80 Cr consideration","gold"],
+    ["Month site visits", v? String(+v.g_mSV||0):"—", r? "as of "+dmy(r.date):"save a daily report"],
+    ["Sangam bookings · month", v? String(+v.s_mBook||0):"—", v? "₹"+(parseMoney(v.s_mBookVal)/1e7).toFixed(2)+" Cr value":""],
+    ["Sangam collection · month", v? (mv/1e7).toFixed(2)+" Cr":"—", ""],
+    ["Monthly CP visits", v? String(+v.c_mVisit||0):"—", v? (+v.c_mBook||0)+" CP bookings":""],
+  ];
+  $("#kpis").innerHTML=k.map(x=>`<div class="kpi ${x[3]||""}"><span>${esc(x[0])}</span><b>${esc(x[1])}</b><small>${esc(x[2])}</small></div>`).join("");
+  // due list: log follow-ups + dated notes
+  const due=[];
+  S.logs.forEach(l=>{ if(l.fu && !l.done && l.fu<=TODAY) due.push({k:"log",id:l.id,date:l.fu,title:(l.next||l.purpose||"Follow up"),sub:[l.cp,l.client].filter(Boolean).join(" · ")}) });
+  S.notes.forEach(n=>{ if(n.date && !n.done && n.date<=TODAY) due.push({k:"note",id:n.id,date:n.date,title:n.text,sub:n.type}) });
+  due.sort((a,b)=>a.date<b.date?-1:1);
+  $("#dueList").innerHTML = due.length ? due.map(d=>`<div class="item ${d.date<TODAY?"over":"due"}"><div class="txt"><div>${esc(d.title)}</div><div class="meta">${esc(d.sub||"")} · ${d.date<TODAY?"overdue since "+dmy(d.date):"today"}</div></div><button class="b sm" data-done="${d.k}:${esc(d.id)}">Done</button></div>`).join("")
+    : `<div class="empty">Nothing due today. Follow-ups you set in Meetings &amp; Follow-ups will appear here on their date.</div>`;
+  const b=$("#fuBadge"); b.hidden=!due.length; b.textContent=due.length;
+  const notes=S.notes.filter(n=>!n.done).sort((a,b)=>(b.updatedAt||"")<(a.updatedAt||"")?-1:1).slice(0,8);
+  $("#noteList").innerHTML = notes.length ? notes.map(n=>`<div class="item"><div class="txt"><div>${esc(n.text)}</div><div class="meta"><span class="chip c-tier">${esc(n.type)}</span> ${n.date?"· remind "+dmy(n.date):""}</div></div><div class="btns"><button class="b sm" data-done="note:${esc(n.id)}">Done</button></div></div>`).join("")
+    : `<div class="empty">No notes yet. Type one above and press Save note.</div>`;
+  const react=cpList().filter(c=>c.p && c.p.c.b===0 && (c.p.a.b+c.p.b.b)>0).sort((a,b)=>b.tv-a.tv);
+  $("#reactList").innerHTML = react.map(c=>{const lc=lastContact(c.name);return `<div class="item"><div class="txt"><b>${esc(c.name)}</b> <span class="chip c-tier">Tier ${c.tier}</span><div class="meta">${c.p.a.b+c.p.b.b} bookings Mar 25–Mar 26 · ${crL(c.p.a.v+c.p.b.v)} · ${c.p.c.sv?c.p.c.sv+" SVs in Apr–Sep 26":"no SVs in Apr–Sep 26"} · ${lc?"last contact "+dmy(lc):"no contact logged"}</div></div><button class="b sm" data-logcp="${esc(c.name)}">Log call</button></div>`}).join("");
+}
+
+/* ---------- CP DIRECTORY ---------- */
+let cpFilter="all", openCp=null;
+function renderCPs(){
+  const tbl=$("#cpTable"); if(tbl.contains(document.activeElement) && document.activeElement.tagName!=="TR") return;
+  const q=$("#cpSearch").value.trim().toLowerCase();
+  const list=cpList().filter(c=>(cpFilter==="all"||c.status===cpFilter) && (!q || [c.name,c.info.person,c.info.area,c.info.phone].join(" ").toLowerCase().includes(q)));
+  const max=Math.max(...cpList().map(c=>c.tv),1);
+  $("#cpNames").innerHTML=cpList().map(c=>`<option value="${esc(c.name)}">`).join("");
+  const cls={Active:"c-act",Warm:"c-warm",Dormant:"c-dorm",New:"c-new"};
+  let h=`<thead><tr><th>CP</th><th>Status</th><th class="n">Mar–Sep 25</th><th class="n">Oct 25–Mar 26</th><th class="n">Apr–Sep 26</th><th class="n">Total value</th><th>Last contact</th></tr></thead><tbody>`;
+  list.forEach(c=>{
+    const lc=lastContact(c.name), p=c.p;
+    h+=`<tr class="cprow ${openCp===c.id?"open":""}" data-cp="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.info.person?`<div class="meta" style="font-size:.78rem;color:var(--muted)">${esc(c.info.person)}${c.info.phone?" · "+esc(c.info.phone):""}</div>`:""}</td>
+      <td><span class="chip ${cls[c.status]}">${c.status}</span> <span class="chip c-tier">${c.tier}</span></td>
+      <td class="n">${p?p.a.b:"–"}</td><td class="n">${p?p.b.b:"–"}</td><td class="n">${p?p.c.b:"–"}</td>
+      <td class="n">${crL(c.tv)}<div class="bar"><i style="width:${(c.tv/max*100).toFixed(1)}%"></i></div></td><td>${lc?dmy(lc):"—"}</td></tr>`;
+    if(openCp===c.id) h+=`<tr><td colspan="7">${cpDetail(c)}</td></tr>`;
+  });
+  if(!list.length) h+=`<tr><td colspan="7"><div class="empty">No CPs match. Clear the search or pick another filter.</div></td></tr>`;
+  tbl.innerHTML=h+"</tbody>";
+}
+function cpDetail(c){
+  const p=c.p, i=c.info;
+  const rows = p ? ["a","b","c"].map(k=>`<tr><td>${PERIODS[k]}</td><td class="n">${p[k].sv??"—"}</td><td class="n">${p[k].b}</td><td class="n">${crL(p[k].v)}</td><td class="n">${p[k].sv?Math.round(p[k].b/p[k].sv*100)+"%":"—"}</td></tr>`).join("") : "";
+  const logs=S.logs.filter(l=>(l.cp||"").toLowerCase()===c.name.toLowerCase()).sort((a,b)=>b.date<a.date?-1:1).slice(0,6);
+  return `<div class="detail">
+    <div>${p?`<h3>Performance</h3><table class="mini"><thead><tr><th>Period</th><th class="n">SVs</th><th class="n">Bookings</th><th class="n">Value</th><th class="n">Conv.</th></tr></thead><tbody>${rows}</tbody></table>`:`<p class="hint">New CP. Performance appears once bookings come in.</p>`}
+      <h3 style="margin-top:12px">Recent interactions</h3>${logs.length?`<ul class="clean">${logs.map(l=>`<li><b>${dmy(l.date)}</b> ${esc(l.type)}: ${esc(l.purpose||l.outcome||"")}</li>`).join("")}</ul>`:`<p class="hint">None logged yet.</p>`}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h3>Contact details</h3>
+      <div class="row"><label>Contact person<input id="cd-person" value="${esc(i.person)}"></label><label>Phone<input id="cd-phone" value="${esc(i.phone)}" inputmode="tel"></label></div>
+      <div class="row"><label>Area<input id="cd-area" value="${esc(i.area)}"></label><label>RERA no.<input id="cd-rera" value="${esc(i.rera)}"></label></div>
+      <label>Notes<textarea id="cd-notes" rows="3">${esc(i.notes)}</textarea></label>
+      <div class="btns"><button class="b pri sm" data-cpsave="${esc(c.id)}">Save details</button><button class="b sm" data-logcp="${esc(c.name)}">Log interaction</button></div>
+    </div></div>`;
+}
+
+/* ---------- FOLLOW-UPS ---------- */
+function renderFU(){
+  const pend=S.logs.filter(l=>l.fu && !l.done).sort((a,b)=>a.fu<b.fu?-1:1);
+  $("#pendCount").textContent=pend.length? pend.length+" open":"";
+  $("#pendList").innerHTML = pend.length ? pend.map(l=>`<div class="item ${l.fu<TODAY?"over":l.fu===TODAY?"due":"fut"}"><div class="txt"><div><b>${esc(l.next||l.purpose||"Follow up")}</b></div><div class="meta">${esc([l.cp,l.client].filter(Boolean).join(" · "))} · ${l.fu<TODAY?"overdue · ":""}${dmy(l.fu)}</div></div><button class="b sm" data-done="log:${esc(l.id)}">Done</button></div>`).join("")
+    : `<div class="empty">No pending follow-ups. Add a follow-up date when you log a call and it shows up here.</div>`;
+  const q=$("#histSearch").value.trim().toLowerCase();
+  const hist=S.logs.filter(l=>!q || JSON.stringify(l).toLowerCase().includes(q)).sort((a,b)=>(b.date||"")<(a.date||"")?-1:1).slice(0,60);
+  $("#histList").innerHTML = hist.length ? hist.map(l=>`<div class="item"><div class="txt"><div><b>${dmy(l.date)}</b> · <span class="chip c-tier">${esc(l.type)}</span> <b>${esc(l.cp||"")}</b>${l.client?" · "+esc(l.client):""}</div>
+      ${l.purpose?`<div>${esc(l.purpose)}</div>`:""}${l.outcome?`<div class="meta">${esc(l.outcome)}</div>`:""}${l.next?`<div class="meta">Next: ${esc(l.next)}${l.fu?" by "+dmy(l.fu):""}${l.done?" ✓ done":""}</div>`:""}${l.uro?`<div class="meta">Missing: ${esc(l.uro)}</div>`:""}</div>
+      <div class="btns"><button class="b sm" data-sum="${esc(l.id)}">Copy summary</button><button class="b sm ghost" data-dellog="${esc(l.id)}">Delete</button></div></div>`).join("")
+    : `<div class="empty">Your calls, meetings and visits will be listed here once you log them.</div>`;
+}
+function logSummary(l){
+  return `*${l.type} Summary – ${dmy(l.date)}*\nCP: ${l.cp||"-"}${l.client?"\nClient: "+l.client:""}\nPurpose: ${l.purpose||"-"}\nDiscussion: ${l.outcome||"-"}\nNext step: ${l.next||"-"}${l.fu?" (by "+dmy(l.fu)+")":""}`;
+}
+
+/* ---------- DAILY REPORT ---------- */
+// t: n=count, m=money, t=text. acc: month field accumulates from this daily field. nil: output when empty/0
+const RF=[
+ {sec:"General", f:[
+  {k:"g_sv",l:"Site visits",t:"n",acc:"g_mSV"},{k:"g_svSrc",l:"Visit source",t:"t",nil:"N/A"},{k:"g_svSub",l:"Sub source via CP",t:"t",nil:"N/A"},
+  {k:"g_rv",l:"Re-visit",t:"n"},{k:"g_orv",l:"Old re-visit",t:"n",acc:"g_mORV"},{k:"g_orvSrc",l:"Source of old re-visit",t:"t",nil:"N/A"},
+  {k:"g_out",l:"Out-visits",t:"n"},{k:"g_vc",l:"VC",t:"n",acc:"g_mVC"},{k:"g_vcSrc",l:"VC source",t:"t",nil:"N/A"},
+  {k:"g_mSV",l:"Month site visit",t:"n",month:1},{k:"g_mORV",l:"Month old re-visit",t:"n",month:1},{k:"g_mVC",l:"Month VC",t:"n",month:1}]},
+ {sec:"Sangam", f:[
+  {k:"s_book",l:"Booking",t:"n",acc:"s_mBook"},{k:"s_bookSrc",l:"Booking source",t:"t"},{k:"s_unit",l:"Unit booked",t:"t"},{k:"s_sub",l:"Sub source via CP",t:"t"},
+  {k:"s_bookVal",l:"Today's booking value",t:"m",acc:"s_mBookVal"},{k:"s_canc",l:"Cancellation",t:"n",acc:"s_mCanc",zero:"0"},{k:"s_cancR",l:"Cancellation reason",t:"t"},
+  {k:"s_erp",l:"ERP entry on hold",t:"t",nil:"NIL"},
+  {k:"s_tPlotA",l:"Today's coll · Plot A",t:"m",acc:"s_mPlotA"},{k:"s_tPlotB",l:"Today's coll · Plot B",t:"m",acc:"s_mPlotB"},
+  {k:"s_mPlotA",l:"Month coll · Plot A",t:"m",month:1},{k:"s_mPlotB",l:"Month coll · Plot B",t:"m",month:1},
+  {k:"s_mBookVal",l:"Monthly booking value",t:"m",month:1},{k:"s_mBook",l:"Month's booking",t:"n",month:1},{k:"s_mCanc",l:"Month's cancellation",t:"n",month:1,zero:"0"}]},
+ {sec:"Triveni", f:[
+  {k:"t_sv",l:"Site visit",t:"n",acc:"t_mSV"},{k:"t_svSrc",l:"Visit source",t:"t",nil:"N/A"},{k:"t_sub",l:"Sub source via CP",t:"t",nil:"N/A"},
+  {k:"t_rv",l:"Re-visit",t:"n"},{k:"t_orv",l:"Old re-visit",t:"n",acc:"t_mORV"},{k:"t_orvSrc",l:"Old re-visit source",t:"t",nil:"N/A"},
+  {k:"t_book",l:"Booking",t:"n",acc:"t_mBook"},{k:"t_unit",l:"Office unit no.",t:"t",nil:"N/A"},{k:"t_bookSrc",l:"Booking source",t:"t",nil:"N/A"},
+  {k:"t_bookVal",l:"Today's booking value",t:"m",acc:"t_mBookVal"},{k:"t_coll",l:"Today's coll",t:"m",acc:"t_mColl"},
+  {k:"t_mSV",l:"Month site visit",t:"n",month:1,zero:"0"},{k:"t_mORV",l:"Month old re-visit",t:"n",month:1},
+  {k:"t_mBookVal",l:"Month's booking value",t:"m",month:1},{k:"t_mBook",l:"Month's booking",t:"n",month:1},{k:"t_mColl",l:"Month's coll",t:"m",month:1},
+  {k:"t_mCanc",l:"Month cancellation",t:"t",nil:"N/A",carry:1}]},
+ {sec:"Prayag", f:[{k:"p_coll",l:"Daily collection",t:"m",acc:"p_mColl"},{k:"p_mColl",l:"Monthly collection",t:"m",month:1},
+  {k:"p_dream",l:"20:80 Dream Scheme bookings",t:"area",carry:1}]},
+ {sec:"CP report (NKS)", f:[
+  {k:"c_calls",l:"Today's CP calls",t:"n",acc:"c_total",zero:"0"},{k:"c_total",l:"Total calls",t:"n",month:1,cumul:1},
+  {k:"c_meet",l:"Today's CP meet",t:"n",acc:"c_mMeet",zero:""},{k:"c_book",l:"Today's CP bookings",t:"n",acc:"c_mBook",zero:"0"},
+  {k:"c_visit",l:"Today's CP visit",t:"n",acc:"c_mVisit",zero:"0"},{k:"c_vc",l:"Today's CP VC",t:"n",acc:"c_mVC",zero:"0"},{k:"c_vcNames",l:"VC with (CP names)",t:"t"},
+  {k:"c_mVC",l:"Monthly CP VC",t:"n",month:1},{k:"c_mMeet",l:"Monthly CP meets",t:"n",month:1,zero:"0"},{k:"c_mBook",l:"Monthly CP booking",t:"n",month:1},{k:"c_mVisit",l:"Monthly CP visit",t:"n",month:1}]},
+];
+const FIELDS=Object.fromEntries(RF.flatMap(s=>s.f).map(f=>[f.k,f]));
+let base={}, dirty={}, formTouched=false, loadedFrom=null;
+function buildReportForm(){
+  $("#rpForm").innerHTML = RF.map(s=>`<fieldset><legend>${esc(s.sec)}</legend><div class="row">${s.f.map(f=>{
+    const lab=`${esc(f.l)}${f.month?' <span class="auto">AUTO</span>':""}`;
+    if(f.t==="area") return `<label style="grid-column:1/-1">${lab}<textarea id="rf-${f.k}" rows="2"></textarea></label>`;
+    const im=f.t==="t"?"text":"decimal";
+    return `<label>${lab}<input id="rf-${f.k}" inputmode="${im}" autocomplete="off">${f.t==="m"?`<span class="money-hint" id="mh-${f.k}"></span>`:""}</label>`}).join("")}</div></fieldset>`).join("");
+}
+const val = k => { const el=$("#rf-"+k); return el? el.value.trim() : "" };
+const numv = k => { const f=FIELDS[k]; const v=val(k); return f.t==="m"? parseMoney(v) : (parseFloat(v)||0) };
+function setVal(k,v){ const el=$("#rf-"+k); if(el) el.value = (v===undefined||v===null)?"":v }
+function fmtStore(f,n){ if(f.t==="m") return n? String(Math.round(n*100)/100) : ""; return n? String(n) : (f.month?"0":"") }
+function recalcMonths(){
+  RF.flatMap(s=>s.f).forEach(f=>{ if(f.acc && !dirty[f.acc]){ const mf=FIELDS[f.acc]; setVal(f.acc, fmtStore(mf,(base[f.acc]||0)+numv(f.k))) } });
+  RF.flatMap(s=>s.f).filter(f=>f.t==="m").forEach(f=>{ const h=$("#mh-"+f.k); if(h){ const n=numv(f.k); h.textContent = n? "= ₹"+indian(n)+"  ("+short(n)+")" : "" } });
+  renderReportOut();
+}
+function loadReportForDate(date){
+  dirty={}; base={};
+  const existing=S.reports.find(r=>r.id===date);
+  if(existing){
+    const v=existing.v||{};
+    Object.keys(FIELDS).forEach(k=>setVal(k,v[k]??""));
+    RF.flatMap(s=>s.f).forEach(f=>{ if(f.acc) base[f.acc]=(base[f.acc]||0) + (FIELDS[f.acc].t==="m"?parseMoney(v[f.acc]):(parseFloat(v[f.acc])||0)) - (f.t==="m"?parseMoney(v[f.k]):(parseFloat(v[f.k])||0)) });
+    $("#rpBaseInfo").textContent="Editing your saved report for "+dmy(date)+".";
+    loadedFrom=date;
+  } else {
+    const prev=latestReport(date), same = prev && prev.date.slice(0,7)===date.slice(0,7);
+    Object.keys(FIELDS).forEach(k=>setVal(k,""));
+    RF.flatMap(s=>s.f).forEach(f=>{
+      if(f.month){ const pv=prev?prev.v[f.k]:""; const n = f.t==="m"?parseMoney(pv):(parseFloat(pv)||0); base[f.k] = (same||f.cumul) ? n : 0; }
+      if(f.carry && prev) setVal(f.k, prev.v[f.k]||"");
+    });
+    $("#rpBaseInfo").textContent = prev ? (same? "Month totals continue from "+dmy(prev.date)+"." : (f=>"New month: totals start from zero (total calls carried from "+dmy(prev.date)+").")()) : "First report: fill month totals once, they'll carry forward after that.";
+    loadedFrom=null;
   }
-};
-
-/* ---------- backup, restore, CSV ---------- */
-function download(name, blob) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  recalcMonths();
 }
-$("exportBtn").addEventListener("click", () => {
-  download(`cp-desk-backup-${TODAY}.json`, new Blob([JSON.stringify(store, null, 2)], { type: "application/json" }));
-  toast("Backup downloaded");
-});
-$("csvBtn").addEventListener("click", () => {
-  const cols = ["name", "firm", "phone", "rera", "locality", "tier", "status", "leads", "visits", "bookings", "valueCr", "commissionL", "paidL", "lastContact", "nextFollowUp", "notes"];
-  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const csv = [cols.join(","), ...state.partners.map(p => cols.map(c => q(p[c])).join(","))].join("\r\n");
-  download(`cp-register-${TODAY}.csv`, new Blob(["﻿" + csv], { type: "text/csv" }));
-  toast("Partner register exported to CSV");
-});
-$("importBtn").addEventListener("click", () => $("importFile").click());
-$("importFile").addEventListener("change", async e => {
-  const f = e.target.files[0]; if (!f) return;
-  try {
-    const d = JSON.parse(await f.text());
-    if (!d || !d.partners || !d.activity) throw new Error("bad file");
-    store = d; commit(); toast(`Restored ${Object.keys(d.partners).length} partners`);
-  } catch (err) { toast("That file isn’t a CP desk backup. Choose a .json file made with Export backup."); }
-  e.target.value = "";
-});
-let clearArmed = false;
-$("clearSampleBtn").addEventListener("click", () => {
-  const b = $("clearSampleBtn");
-  if (!clearArmed) { clearArmed = true; b.textContent = "Click again to confirm"; setTimeout(() => { clearArmed = false; b.textContent = "Remove samples"; }, 4000); return; }
-  ["partners", "activity"].forEach(c => Object.keys(store[c]).forEach(id => { if (store[c][id].sample) delete store[c][id]; }));
-  clearArmed = false; b.textContent = "Remove samples";
-  commit(); toast("Sample records removed");
-});
+function maybePrefillReport(){ if(!formTouched && $("#rpDate")) loadReportForDate($("#rpDate").value||TODAY) }
+function rv(k){ // display value for output
+  const f=FIELDS[k], v=val(k);
+  if(f.t==="t"||f.t==="area") return v || (f.nil??"");
+  const n=numv(k);
+  if(f.t==="n"){ if(!n) return f.zero!==undefined? f.zero : "NIL"; return f.month? pad(n) : String(n) }
+  return n;
+}
+function salesText(){
+  const d=dmy($("#rpDate").value), m=k=>numv(k);
+  const sToday=m("s_tPlotA")+m("s_tPlotB"), sMonth=m("s_mPlotA")+m("s_mPlotB");
+  const bv=m("s_bookVal");
+  return `${d}
+Site Visits: ${rv("g_sv")}
+Visit Source: ${rv("g_svSrc")}
+Sub Sources of Lead via CP: ${rv("g_svSub")}
+Re-visit: ${rv("g_rv")}
+Old Re-visit: ${rv("g_orv")}
+Source of Old Re-visit: ${rv("g_orvSrc")}
+Out-visits: ${rv("g_out")}
+Month Site Visit: ${rv("g_mSV")}
+Month Old Re-Visit: ${rv("g_mORV")}
+VC: ${rv("g_vc")}
+VC Source: ${rv("g_vcSrc")}
+Month VC: ${rv("g_mVC")}
 
-setStore(persisted, persisted ? "Saved in this browser" : "Not saving");
-if (!persisted) banner("This browser is blocking storage, so changes will be lost when you close the page. Use Export backup to keep a copy.");
-sync();
+SANGAM
+Booking: ${rv("s_book")}
+Booking Source: ${rv("s_bookSrc")}
+Unit Booked: ${rv("s_unit")}
+Sub Source of Lead via CP: ${rv("s_sub")}
+Today's Booking Value: ${bv? short(bv):""}
+Cancellation: ${rv("s_canc")}
+Cancellation Reason: ${rv("s_cancR")}
+ERP Entry on Hold: ${rv("s_erp")}
+Month's Coll: ${sMonth? (sMonth>=1e7? (sMonth/1e7).toFixed(2)+" Cr.":short(sMonth)) :"NIL"}
+Plot A: ${indian(m("s_mPlotA"))}
+Plot B: ${indian(m("s_mPlotB"))}
+Monthly Booking Value: ${m("s_mBookVal")? (m("s_mBookVal")>=1e7?(m("s_mBookVal")/1e7).toFixed(2)+" CR":short(m("s_mBookVal"))):"NIL"}
+Month's Booking: ${rv("s_mBook")}
+Month's Cancellation: ${rv("s_mCanc")}
+Today's Coll: ${short(sToday)}${sToday?".":""}
+Plot A: ${indian(m("s_tPlotA"))}
+Plot B: ${indian(m("s_tPlotB"))}
+
+TRIVENI
+Site Visit: ${rv("t_sv")}
+Visit Source: ${rv("t_svSrc")}
+Sub source of Lead via CP: ${rv("t_sub")}
+Re-visit: ${rv("t_rv")}
+Old Re-Visit: ${rv("t_orv")}
+Old Re-visit Source: ${rv("t_orvSrc")}
+Month Site Visit: ${rv("t_mSV")}
+Month Old Re-Visit: ${rv("t_mORV")}
+
+Booking: ${rv("t_book")}
+Office Unit No: ${rv("t_unit")}
+Booking Source: ${rv("t_bookSrc")}
+Today's Booking Value: ${short(m("t_bookVal"))}
+Month's Booking Value: ${short(m("t_mBookVal"))}
+Month's Booking: ${rv("t_mBook")}
+Month's Coll: ${short(m("t_mColl"))}
+Today's Coll: ${short(m("t_coll"))}
+Month Cancellation: ${rv("t_mCanc")}
+
+PRAYAG
+DAILY COLLECTION - ${short(m("p_coll"))}
+MONTHLY COLLECTION - ${short(m("p_mColl"))}
+
+20:80 Dream Scheme Booking:
+${val("p_dream")}`;
+}
+function cpText(){
+  const d=dmy($("#rpDate").value), names=val("c_vcNames");
+  return `[NKS Report] [${d}]
+
+- Today's CP calls: ${rv("c_calls")}
+- Total calls: ${numv("c_total")||0}
+- Today's CP Meet: ${rv("c_meet")}
+- Today's CP Bookings: ${rv("c_book")}
+- Today's CP Visit: ${rv("c_visit")}
+- Today's CP VC: ${rv("c_vc")}${names?" ("+names+")":""}
+
+- Monthly CP VC: ${rv("c_mVC")}
+- Monthly CP Meets: ${rv("c_mMeet")}
+- Monthly CP Booking: ${rv("c_mBook")}
+- Monthly CP Visit: ${rv("c_mVisit")}`;
+}
+function renderReportOut(){ $("#salesOut").textContent=salesText(); $("#cpOut").textContent=cpText() }
+function renderReportHist(){
+  const list=[...S.reports].sort((a,b)=>b.date<a.date?-1:1).slice(0,40);
+  $("#rpHist").innerHTML = list.length ? list.map(r=>`<div class="item"><div class="txt"><b>${dmy(r.date)}</b><div class="meta">Sangam month coll ${short(parseMoney(r.v.s_mPlotA)+parseMoney(r.v.s_mPlotB))} · ${+r.v.s_mBook||0} bookings · ${+r.v.g_mSV||0} SVs</div></div><div class="btns"><button class="b sm" data-openrp="${esc(r.id)}">Open</button></div></div>`).join("")
+    : `<div class="empty">Saved reports appear here. Each one becomes the starting point for the next day.</div>`;
+}
+async function saveReport(){
+  const date=$("#rpDate").value||TODAY; const v={};
+  Object.keys(FIELDS).forEach(k=>v[k]=val(k));
+  if(await put("reports",date,{date,v})){ toast("Report for "+dmy(date)+" saved"); formTouched=false; loadedFrom=date; $("#rpBaseInfo").textContent="Editing your saved report for "+dmy(date)+"."; }
+}
+
+/* ---------- TEMPLATES ---------- */
+const TPL=[
+ {id:"t-svreg",name:"Site visit registration reminder (all CPs)",body:`Dear Partner,
+
+Gentle reminder: please register all planned site visits for *New Kolkata Sangam* in the Google Sheet *before 10 AM* today. Visits confirmed later must be registered immediately.
+
+A client who reaches site without your registration cannot be credited to you, even if you have been in touch with them.
+
+For any help, call me directly.
+
+Regards,
+Sweta
+Alcove Realty – Channel Partner Team`},
+ {id:"t-svconf",name:"Site visit confirmation to CP",body:`Dear [CP Name],
+
+Your client's site visit is confirmed:
+👤 Client: [Client Name]
+📅 Date: [Date] | ⏰ Time: [Time]
+📍 Alcove New Kolkata Sangam, Mahesh Bose Para, Serampore 712202
+
+Our sales team will be ready to receive you. Please share the client's purpose of purchase and budget in advance so we can prepare the right options.
+
+Regards,
+Sweta | Alcove Realty`},
+ {id:"t-thanks",name:"Booking thank-you to CP",body:`Dear [CP Name],
+
+Congratulations and thank you for the booking of *[Unit No.]* at *New Kolkata Sangam* by [Client Name]. 🎉
+
+Brokerage invoice can be raised once the client completes 20% payment and the sale agreement is executed. Please keep your RERA certificate ready with the invoice.
+
+Looking forward to many more closures together.
+
+Warm regards,
+Sweta | Alcove Realty`},
+ {id:"t-brok",name:"Brokerage status update",body:`Dear [CP Name],
+
+Update on your brokerage for *[Client Name] – [Unit No.]*:
+
+• Status: [Under verification / Approved / Released]
+• Eligible consideration: Agreement value less ₹175 per sq ft infrastructure charge
+• Payment timeline: within 30 working days from bill submission
+
+I will keep you posted. Feel free to reach me for any clarification.
+
+Regards,
+Sweta | Alcove Realty`},
+ {id:"t-welcome",name:"New CP welcome / onboarding",body:`Dear [CP Name],
+
+Welcome to the Alcove Realty Channel Partner family! 🙏
+
+*New Kolkata Sangam, Serampore*
+• 19 acres · 15 towers · 3,500 homes
+• 180 m private Ganga ghat with daily Ganga aarti
+• 56,000 sq ft grand clubhouse
+• Ready community: 2 BHK, 3 BHK and 4 BHK homes
+
+To activate your account please share:
+1. Valid RERA registration certificate (mandatory for empanelment and commission)
+2. PAN, GST (if applicable) and cancelled cheque
+
+I'll share the brochure, price list and site visit process next. Let's plan a site tour this week.
+
+Regards,
+Sweta
+Assistant Manager – Channel Partner Sales, Alcove Realty`},
+ {id:"t-lockin",name:"Lock-in renewal reminder",body:`Dear [CP Name],
+
+The 90-day lock-in for your client *[Client Name]* (first visit on [Date]) expires on *[Expiry Date]*.
+
+If you're still in discussion, please send the RENEW tagging request email to Alcove Realty before the expiry date, with a snapshot of your WhatsApp interaction with the client. Without renewal, credit cannot be given for a booking after expiry.
+
+Regards,
+Sweta | Alcove Realty`},
+ {id:"t-react",name:"Re-engage a dormant CP",body:`Hi [CP Name],
+
+It's been a while since we worked together on New Kolkata Sangam, and we've missed you!
+
+A few things have changed that help close 2nd-home buyers faster, including new options that make the token risk-free and ease payment timelines. I'd love to walk you through them.
+
+Can we meet this week, or would you like to bring a client for a site visit this weekend?
+
+Regards,
+Sweta | Alcove Realty`},
+ {id:"t-weekend",name:"Weekend site visit push",body:`Dear Partners,
+
+This weekend (Fri–Sun) is the best time to bring your clients and their families to *New Kolkata Sangam*. 🌅
+
+✨ Walk the 180 m private Ganga ghat
+✨ Stay for the evening Ganga aarti
+✨ Tour the 56,000 sq ft clubhouse
+
+Please register your visits in the Google Sheet before 10 AM on the day of the visit.
+
+See you at site!
+Sweta | Alcove Realty`},
+ {id:"t-meetmail",name:"Meeting follow-up email",body:`Subject: Thank you for meeting – Alcove New Kolkata Sangam
+
+Dear [CP Name],
+
+Thank you for your time today. As discussed:
+
+1. [Point 1]
+2. [Point 2]
+3. [Point 3]
+
+Next steps: [Next step] by [Date].
+
+Please feel free to reach me for anything you need.
+
+Warm regards,
+Sweta
+Assistant Manager – Channel Partner Sales
+Alcove Realty`},
+];
+let tplOpen=null;
+function renderTemplates(){
+  const mine=S.templates.map(t=>({...t,mine:1}));
+  const all=[...mine,...TPL];
+  $("#tplList").innerHTML=all.map(t=>`<div class="item tpl" data-tpl="${esc(t.id)}" tabindex="0"><div class="txt"><b>${esc(t.name)}</b><div class="meta">${t.mine?'<span class="chip c-new">Mine</span> ':""}${esc((t.body||"").replace(/\s+/g," ").slice(0,90))}…</div></div></div>`).join("");
+}
+function openTpl(id){
+  const t=S.templates.find(x=>x.id===id) || TPL.find(x=>x.id===id); if(!t) return;
+  tplOpen=t; $("#tplName").value=t.name; $("#tplBody").value=t.body; $("#tplDel").hidden=!S.templates.find(x=>x.id===id);
+  $("#tplTitle").textContent=t.name;
+}
+
+/* ---------- KB textareas ---------- */
+function renderKB(){
+  document.querySelectorAll("textarea.kb").forEach(ta=>{ if(document.activeElement===ta) return; const d=S.kb.find(x=>x.id===ta.dataset.kb); if(d && ta.value!==d.text) ta.value=d.text||"" });
+}
+
+/* ---------- Brokerage calculator ---------- */
+function calc(){
+  const v=parseMoney($("#bcVal").value), sq=parseFloat($("#bcSqft").value)||0, pct=parseFloat($("#bcPct").value)/100, g=parseFloat($("#bcGst").value)/100;
+  const elig=Math.max(v-175*sq,0), br=elig*pct, gst=br*g;
+  $("#bcOut").innerHTML = v ? `<span>Agreement value</span><b>₹${indian(v)}</b><span>Less ₹175 × ${sq||0} sq ft</span><b>– ₹${indian(175*sq)}</b><span>Brokerage-eligible</span><b>₹${indian(elig)}</b><span>Brokerage @ ${(pct*100).toFixed(2)}%</span><b>₹${indian(br)}</b><span>GST ${g*100}%</span><b>₹${indian(gst)}</b><span><b style="text-align:left">Total payable</b></span><b>₹${indian(br+gst)}</b>`
+    : `<span class="hint" style="grid-column:1/-1">Enter the agreement value and saleable area to see the brokerage.</span>`;
+}
+
+/* ---------- ASK ---------- */
+const QS=["Which CPs had site visits but no bookings in Apr–Sep 2026? Suggest one action each.","Summarise my pending follow-ups and what to do first today.","Draft a WhatsApp to Murti Realty to re-engage them.","Explain the URO elements I can offer a buyer with a 10% down-payment gap."];
+let sampleNs;
+function context(){
+  const cps=cpList().map(c=>`${c.name} | ${c.status} | tier ${c.tier} | ${c.p?["a","b","c"].map(k=>`${PERIODS[k]}: ${c.p[k].b} bk, ${c.p[k].sv??"?"} SV, ${(c.p[k].v/1e5).toFixed(1)}L`).join("; "):"new"}${c.info.person?" | contact "+c.info.person:""}${c.info.notes?" | notes: "+c.info.notes:""}`).join("\n");
+  const logs=[...S.logs].sort((a,b)=>b.date<a.date?-1:1).slice(0,60).map(l=>`${l.date} ${l.type} ${l.cp||""} ${l.client||""}: ${l.purpose||""} / ${l.outcome||""} / next: ${l.next||""} ${l.fu||""} ${l.done?"(done)":""}`).join("\n");
+  const notes=S.notes.slice(-40).map(n=>`[${n.type}${n.done?", done":""}] ${n.text} ${n.date||""}`).join("\n");
+  const kb=S.kb.map(k=>`${k.id}: ${k.text}`).join("\n");
+  const r=latestReport();
+  return `You are the personal assistant of Sweta, Assistant Manager – Channel Partner Sales at Alcove Realty, Kolkata. Today is ${TODAY}. Answer concisely in plain language. When drafting WhatsApp messages keep them short and professional.
+
+PROJECT: New Kolkata Sangam, Serampore. 19 acres, 15 towers, 3,500 homes, 180m private Ganga ghat, daily Ganga aarti, 56,000 sq ft clubhouse. Signature (T1,2,3,9,10,11) and Serenity (T5,6,7,13,14,15,16): 2BHK-S 887/910 sqft, 3BHK 1,039 sqft. Suites (T4,T12): 3BHK 1,400, 4BHK 2,086 sqft. Parking 4.00L/4.75L/5.25L. Price band ~50L–1.1Cr. Mostly 2nd-home buyers.
+SCHEME: Apr–Sep 2026 slabs ended. Proposed Oct26–Mar27 half-yearly: up to 1.80Cr 2%; 1.81–4.20 2.5%; 4.21–6.00 3%; 6.21–7.80 3.25%; 7.81–9.60 3.5%; 9.61–12.00 3.75%; 12.01+ 4%. 4BHK/garden/top floor = 2 units + Rs20,000 executive incentive. RERA mandatory. Invoice after 20% + agreement; brokerage on value minus Rs175/sqft; paid in 30 working days. SV registration before 10 AM. 90-day lock-in, RENEW email. Clash: first lead time wins.
+URO elements: E1 15-day refund; E2 90-day financial window; E2A interest subsidy (CIBIL-constrained); E3 bridges 10% own contribution for 90 days; E4 rental assurance up to 6 months (director); E5 cost of inaction; E6 director's bridge ~10L gap; E7 moratorium 3–6 months (director). 5 conditions: desire, conviction, financial readiness, alignment, safety.
+CP PERFORMANCE (bk=bookings, SV=site visits, value in lakhs):
+${cps}
+MY LOGS:
+${logs||"none"}
+MY NOTES:
+${notes||"none"}
+PROJECT NOTES:
+${kb||"none"}
+LATEST DAILY REPORT (${r?r.date:"none"}): ${r?JSON.stringify(r.v):"none"}`;
+}
+async function ask(q){
+  if(!q) return;
+  const out=$("#askOut"); out.hidden=false; out.textContent="Thinking…"; $("#askBtn").disabled=true; $("#askSave").hidden=true;
+  try{
+    const res=await sampleNs([{role:"user",content:context()+"\n\nQUESTION: "+q}],{cache:false,onText:({text})=>{out.textContent=text}});
+    out.textContent=res.text; $("#askSave").hidden=false;
+  }catch(e){
+    out.textContent = e&&e.code==="not_granted" ? "Permission to ask Claude wasn't given. You can allow it from this page's permissions menu." : e&&e.code==="rate_limited" ? "Too many questions in a short time. Wait a minute and try again." : "Couldn't get an answer right now. Try again in a moment.";
+  }finally{ $("#askBtn").disabled=false }
+}
+async function initAsk(){
+  $("#qchips").innerHTML=QS.map(q=>`<button class="fchip" data-q="${esc(q)}" aria-pressed="false">${esc(q)}</button>`).join("");
+  let s=null; try{ if(window.claude&&window.claude.use) s=await window.claude.use("sample") }catch(e){}
+  if(!s){ $("#askNA").hidden=false; $("#askBtn").disabled=true; return }
+  sampleNs=s;
+}
+
+/* ---------- render + events ---------- */
+function renderAll(){ renderToday(); renderCPs(); renderFU(); renderReportHist(); renderTemplates(); renderKB() }
+function showTab(t){
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected", String(b.dataset.t===t)));
+  document.querySelectorAll("section.view").forEach(s=>s.hidden = s.id!=="v-"+t);
+  try{ localStorage.setItem("sb2-tab",t) }catch(e){}
+  window.scrollTo({top:0});
+}
+function clearLog(){ ["lgCp","lgClient","lgPurpose","lgOutcome","lgNext","lgFu","lgUro"].forEach(id=>$("#"+id).value=""); $("#lgDate").value=TODAY; $("#lgType").value="Call" }
+
+document.addEventListener("click", async e=>{
+  const t=e.target.closest("button, tr.cprow, .tpl"); if(!t) return;
+  if(t.classList.contains("tab")) return showTab(t.dataset.t);
+  if(t.dataset.go) return showTab(t.dataset.go);
+  if(t.dataset.done){ const [k,id]=t.dataset.done.split(":"); const c=k==="log"?"logs":"notes"; const row=S[c].find(x=>x.id===id); if(row){ const {id:_,...rest}=row; await put(c,id,{...rest,done:true}); toast("Marked done") } return }
+  if(t.dataset.logcp){ showTab("fu"); clearLog(); $("#lgCp").value=t.dataset.logcp; $("#lgPurpose").focus(); return }
+  if(t.matches("tr.cprow")){ openCp = openCp===t.dataset.cp? null : t.dataset.cp; renderCPs(); return }
+  if(t.dataset.cpsave){ const c=cpList().find(x=>x.id===t.dataset.cpsave); const d={...c.info, name:c.name, person:$("#cd-person").value.trim(), phone:$("#cd-phone").value.trim(), area:$("#cd-area").value.trim(), rera:$("#cd-rera").value.trim(), notes:$("#cd-notes").value.trim()}; delete d.id; t.blur(); if(await put("cpinfo",c.id,d)) toast("Saved "+c.name); return }
+  if(t.dataset.f){ cpFilter=t.dataset.f; document.querySelectorAll("#cpFilters .fchip").forEach(b=>b.setAttribute("aria-pressed",String(b===t))); renderCPs(); return }
+  if(t.dataset.sum){ const l=S.logs.find(x=>x.id===t.dataset.sum); if(l) copyText(logSummary(l)); return }
+  if(t.dataset.dellog){ if(t.dataset.armed){ await del("logs",t.dataset.dellog); toast("Deleted") } else { t.dataset.armed="1"; t.textContent="Tap again to delete"; setTimeout(()=>{ if(t.isConnected){ delete t.dataset.armed; t.textContent="Delete" } },3000) } return }
+  if(t.dataset.copy) return copyText($("#"+t.dataset.copy).textContent);
+  if(t.dataset.openrp){ $("#rpDate").value=t.dataset.openrp; formTouched=true; loadReportForDate(t.dataset.openrp); window.scrollTo({top:0}); return }
+  if(t.dataset.tpl) return openTpl(t.dataset.tpl);
+  if(t.dataset.q){ $("#askQ").value=t.dataset.q; return ask(t.dataset.q) }
+  switch(t.id){
+    case "qcSave": { const text=$("#qcText").value.trim(); if(!text) return toast("Type a note first"); if(await put("notes",newId(),{text,type:$("#qcType").value,date:$("#qcDate").value||"",done:false})){ $("#qcText").value=""; $("#qcDate").value=""; toast("Note saved") } break }
+    case "lgSave": { const cp=$("#lgCp").value.trim(); const d={date:$("#lgDate").value||TODAY,type:$("#lgType").value,cp,client:$("#lgClient").value.trim(),purpose:$("#lgPurpose").value.trim(),outcome:$("#lgOutcome").value.trim(),next:$("#lgNext").value.trim(),fu:$("#lgFu").value||"",uro:$("#lgUro").value,done:false};
+      if(!cp && !d.client && !d.purpose) return toast("Add at least a CP, client or purpose");
+      if(await put("logs",newId(),d)){ toast(d.fu? "Saved. Follow-up set for "+dmy(d.fu) : "Saved"); clearLog() } break }
+    case "lgClear": clearLog(); break;
+    case "addCpBtn": $("#addCpForm").hidden=!$("#addCpForm").hidden; break;
+    case "ncSave": { const name=$("#ncName").value.trim(); if(!name) return toast("Enter the CP name"); if(await put("cpinfo",slug(name),{name,custom:true,person:$("#ncPerson").value.trim(),phone:$("#ncPhone").value.trim(),area:$("#ncArea").value.trim()})){ ["ncName","ncPerson","ncPhone","ncArea"].forEach(i=>$("#"+i).value=""); $("#addCpForm").hidden=true; toast("Added "+name) } break }
+    case "rpSave": saveReport(); break;
+    case "tplNew": tplOpen=null; $("#tplName").value=""; $("#tplBody").value=""; $("#tplTitle").textContent="New template"; $("#tplDel").hidden=true; $("#tplName").focus(); break;
+    case "tplCopy": copyText($("#tplBody").value); break;
+    case "tplSaveBtn": { const name=$("#tplName").value.trim(), body=$("#tplBody").value; if(!name||!body.trim()) return toast("Add a name and message"); const id = tplOpen && S.templates.find(x=>x.id===tplOpen.id) ? tplOpen.id : "my-"+newId(); if(await put("templates",id,{name,body})){ tplOpen={id,name,body}; $("#tplDel").hidden=false; toast("Template saved") } break }
+    case "tplDel": if(tplOpen){ await del("templates",tplOpen.id); tplOpen=null; $("#tplName").value=""; $("#tplBody").value=""; $("#tplDel").hidden=true; toast("Template deleted") } break;
+    case "askBtn": ask($("#askQ").value.trim()); break;
+    case "askSave": if(await put("notes",newId(),{text:$("#askOut").textContent.slice(0,4000),type:"Info",date:"",done:false})) toast("Saved to notes"); break;
+  }
+});
+document.addEventListener("keydown", e=>{ if((e.key==="Enter"||e.key===" ") && e.target.matches("tr.cprow, .tpl")){ e.preventDefault(); e.target.click() } });
+$("#cpSearch").addEventListener("input", renderCPs);
+$("#histSearch").addEventListener("input", renderFU);
+$("#rpForm").addEventListener("input", e=>{ formTouched=true; const k=e.target.id.replace("rf-",""); if(FIELDS[k] && FIELDS[k].month) dirty[k]=true; recalcMonths() });
+$("#rpDate").addEventListener("change", ()=>{ formTouched=false; loadReportForDate($("#rpDate").value||TODAY) });
+["bcVal","bcSqft","bcPct","bcGst"].forEach(id=>$("#"+id).addEventListener("input",calc));
+let kbTimer={};
+document.querySelectorAll("textarea.kb").forEach(ta=>ta.addEventListener("input",()=>{ clearTimeout(kbTimer[ta.dataset.kb]); kbTimer[ta.dataset.kb]=setTimeout(()=>put("kb",ta.dataset.kb,{text:ta.value}),1200) }));
+
+/* ---------- boot ---------- */
+buildReportForm();
+$("#rpDate").value=TODAY; $("#lgDate").value=TODAY;
+let savedTab="today"; try{ savedTab=localStorage.getItem("sb2-tab")||"today" }catch(e){}
+const hashTab=(location.hash||"").slice(1); showTab(["today","cps","fu","report","proj","tpl","ask"].includes(hashTab)?hashTab:savedTab);
+calc(); loadReportForDate(TODAY);
+initStore(); initAsk();
 </script>
-</body>
-</html>
+</body></html>
